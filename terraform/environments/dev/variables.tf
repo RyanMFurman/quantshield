@@ -34,6 +34,12 @@ variable "admin_cidr" {
   default     = "203.0.113.10/32"
 }
 
+variable "ec2_instance_type" {
+  description = "Instance type for the temporary dev web reachability test instance."
+  type        = string
+  default     = "t3.micro"
+}
+
 variable "common_tags" {
   description = "Additional tags to apply to supported resources."
   type        = map(string)
