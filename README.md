@@ -1,34 +1,176 @@
 # QuantShield
 
-QuantShield is a cloud-native financial SOC platform using AWS, Terraform, Python, PostgreSQL, FastAPI, Streamlit, Docker, and GitHub Actions.
+![Status](https://img.shields.io/badge/status-active_development-blue)
+![Terraform](https://img.shields.io/badge/IaC-Terraform-623CE4)
+![AWS](https://img.shields.io/badge/cloud-AWS-orange)
+![Python](https://img.shields.io/badge/backend-Python-yellow)
+![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## Terraform Dev Networking
+Cloud-Native Financial Security Operations Platform built with AWS, Terraform, Python, PostgreSQL, FastAPI, Streamlit, Docker, and GitHub Actions.
 
-The dev Terraform environment provisions the initial AWS networking foundation in `us-east-1`: a VPC, one public subnet, an internet gateway, public routing, and an EC2 security group for web traffic plus SSH from `admin_cidr`.
+QuantShield simulates the cloud infrastructure and security operations center of a boutique quantitative trading firm. The platform combines real AWS infrastructure, security telemetry, threat detection, automated response workflows, and operational dashboards into a production-style engineering project.
 
-The dev environment also includes a small temporary EC2 web test instance so the public subnet, route table, internet gateway, and security group can be verified end to end.
+---
 
-Security group rules:
+## Why This Project Exists
 
-- Inbound HTTP `80` from `0.0.0.0/0`
-- Inbound HTTPS `443` from `0.0.0.0/0`
-- Inbound SSH `22` only from `admin_cidr`
-- Outbound traffic to `0.0.0.0/0`
+QuantShield was built to demonstrate real-world skills across:
 
-From `terraform/environments/dev`, run:
+- Cloud Infrastructure Engineering
+- DevOps / Infrastructure as Code
+- AWS Security Operations
+- Python Backend Development
+- CI/CD Automation
+- Threat Detection Engineering
+- Systems Architecture
 
-```bash
-terraform init
-terraform validate
-terraform plan
-```
+This is not a tutorial CRUD app. It is a full-stack cloud security platform designed as a recruiter-visible portfolio project.
 
-To temporarily verify the stack in AWS, use safe local values based on `terraform.tfvars.example`, then run:
+---
 
-```bash
-terraform apply
-terraform output web_test_url
-terraform destroy
-```
+## Core Features
 
-Use `terraform.tfvars.example` as a safe template for local values. Do not commit real `terraform.tfvars`, secrets, AWS credentials, state files, or generated Terraform directories.
+### Infrastructure as Code
+
+- AWS infrastructure fully managed with Terraform
+- Modular environments (`dev`, `prod`)
+- Reproducible deployments
+- Version-controlled infrastructure
+
+### Cloud Security Monitoring
+
+- Synthetic AWS security event generation
+- CloudTrail / GuardDuty integrations
+- IAM monitoring
+- Detection rules mapped to MITRE ATT&CK
+
+### Backend & Data Platform
+
+- FastAPI REST API
+- PostgreSQL relational datastore
+- Python ingestion pipelines
+- Alert + incident tracking
+
+### Dashboard & Visibility
+
+- Streamlit operations dashboard
+- Live alerts
+- Compliance metrics
+- Security telemetry views
+
+### DevOps Workflow
+
+- Protected `main` branch
+- Feature branch development model
+- Pull request approvals
+- GitHub Actions CI/CD pipeline
+
+---
+
+## High-Level Architecture
+
+```text
+                    ┌────────────────────┐
+                    │   Streamlit UI     │
+                    │ FastAPI Backend    │
+                    └─────────┬──────────┘
+                              │
+                              ▼
+                    ┌────────────────────┐
+                    │ PostgreSQL (RDS)   │
+                    │ Alerts / Events    │
+                    └─────────┬──────────┘
+                              │
+         ┌────────────────────┼────────────────────┐
+         ▼                    ▼                    ▼
+┌────────────────┐   ┌────────────────┐   ┌────────────────┐
+│ Market Ingest  │   │ Detection Eng. │   │ Incident Resp. │
+│ Python / Lambda│   │ Rules Engine   │   │ Auto Actions   │
+└────────────────┘   └────────────────┘   └────────────────┘
+         ▲
+         │
+┌────────────────────────────────────────────┐
+│ AWS Logs / CloudTrail / GuardDuty / Events │
+└────────────────────────────────────────────┘
+
+Technology Stack
+Layer	Technology
+Cloud	AWS
+IaC	Terraform
+Backend	Python / FastAPI
+Database	PostgreSQL
+Dashboard	Streamlit
+Containers	Docker
+CI/CD	GitHub Actions
+Security	IAM / CloudTrail / GuardDuty
+Current Progress
+Completed
+Terraform networking module
+VPC + subnet + routing
+Security groups
+Apply / destroy tested
+Branch protections enabled
+Team workflow established
+In Progress
+IAM module
+RDS PostgreSQL layer
+API foundation
+Detection engine
+Planned
+Streamlit dashboard
+GuardDuty integrations
+GitHub Actions pipelines
+Public live deployment
+Repository Structure
+quantshield/
+├── terraform/
+│   ├── environments/
+│   └── modules/
+├── src/
+│   ├── api/
+│   ├── ingestion/
+│   ├── detection/
+│   └── response/
+├── sql/
+├── docs/
+├── tests/
+└── .github/workflows/
+Engineering Workflow
+1 Issue = 1 Branch = 1 Pull Request
+
+Example:
+
+feature/networking-module
+feature/iam-module
+feature/rds-module
+feature/detection-engine
+
+All changes require review before merge into main.
+
+Security Principles
+Least privilege IAM
+No secrets committed
+Protected main branch
+Infrastructure version control
+Controlled cloud deployments
+Audit visibility through logs
+Roadmap
+ Networking Foundation
+ IAM Architecture
+ PostgreSQL Data Layer
+ FastAPI Backend
+ Detection Rules Engine
+ Dashboard UI
+ CI/CD Automation
+ Public Demo Deployment
+Author
+
+Ryan Furman
+Cloud / DevOps / Infrastructure Engineering
+
+Collaborative project with security engineering contributions.
+
+Disclaimer
+
+QuantShield is a simulated educational and portfolio environment designed to demonstrate engineering capability. It is not connected to live financial systems. 
