@@ -40,6 +40,27 @@ variable "ec2_instance_type" {
   default     = "t3.micro"
 }
 
+variable "lambda_function_names" {
+  # Drives the Lambda log policy scope in the IAM module.
+  description = "Lambda function names allowed to use the dev Lambda execution role."
+  type        = list(string)
+  default     = ["quantshield-dev-api"]
+}
+
+variable "github_repository" {
+  # Restricts GitHub Actions OIDC trust to this repository.
+  description = "GitHub repository allowed to assume the dev deploy role, formatted as owner/repo."
+  type        = string
+  default     = "RyanMFurman/quantshield"
+}
+
+variable "github_allowed_refs" {
+  # Restricts deploy role assumption to known safe branches or tags.
+  description = "Git refs allowed to assume the dev deploy role."
+  type        = list(string)
+  default     = ["refs/heads/main"]
+}
+
 variable "common_tags" {
   description = "Additional tags to apply to supported resources."
   type        = map(string)

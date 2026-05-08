@@ -5,6 +5,11 @@ public_subnet_cidr = "10.10.1.0/24"
 availability_zone  = "us-east-1a"
 ec2_instance_type  = "t3.micro"
 
+# IAM module inputs: keep these scoped to the dev Lambda names and trusted deploy refs.
+lambda_function_names = ["quantshield-dev-api"]
+github_repository     = "RyanMFurman/quantshield"
+github_allowed_refs   = ["refs/heads/main"]
+
 # Documentation-only placeholder from RFC 5737. Replace with your trusted /32 or VPN CIDR.
 admin_cidr = "203.0.113.10/32"
 

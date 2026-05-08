@@ -18,6 +18,18 @@ module "networking" {
   common_tags        = local.common_tags
 }
 
+# Creates least-privilege workload roles and a GitHub Actions deploy role for dev.
+module "iam" {
+  source = "../../modules/iam"
+
+  project_name          = var.project_name
+  environment           = var.environment
+  lambda_function_names = var.lambda_function_names
+  github_repository     = var.github_repository
+  github_allowed_refs   = var.github_allowed_refs
+  common_tags           = local.common_tags
+}
+
 data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]
@@ -34,8 +46,10 @@ data "aws_ami" "amazon_linux_2023" {
 }
 
 resource "aws_instance" "web_test" {
-  ami                         = data.aws_ami.amazon_linux_2023.id
-  instance_type               = var.ec2_instance_type
+  ami           = data.aws_ami.amazon_linux_2023.id
+  instance_type = var.ec2_instance_type
+  # Attach the SSM-enabled instance profile created by the IAM module.
+  iam_instance_profile        = module.iam.ec2_instance_profile_name
   subnet_id                   = module.networking.public_subnet_id
   vpc_security_group_ids      = [module.networking.ec2_public_security_group_id]
   associate_public_ip_address = true
