@@ -8,6 +8,11 @@ output "public_subnet_id" {
   value       = module.networking.public_subnet_id
 }
 
+output "public_subnet_ids" {
+  description = "IDs of all dev public subnets."
+  value       = module.networking.public_subnet_ids
+}
+
 output "internet_gateway_id" {
   description = "ID of the dev internet gateway."
   value       = module.networking.internet_gateway_id
@@ -36,6 +41,37 @@ output "web_test_public_ip" {
 output "web_test_url" {
   description = "HTTP URL for the temporary dev web reachability test instance."
   value       = "http://${aws_instance.web_test.public_ip}"
+}
+
+output "database_endpoint" {
+  description = "PostgreSQL endpoint hostname."
+  value       = module.database.db_endpoint
+}
+
+output "database_instance_id" {
+  description = "ID of the PostgreSQL RDS instance."
+  value       = module.database.db_instance_id
+}
+
+output "database_port" {
+  description = "PostgreSQL endpoint port."
+  value       = module.database.db_port
+}
+
+output "database_name" {
+  description = "PostgreSQL database name."
+  value       = module.database.db_name
+}
+
+output "database_secret_arn" {
+  description = "Secrets Manager ARN for the RDS-managed master user credentials."
+  value       = module.database.db_secret_arn
+  sensitive   = true
+}
+
+output "database_security_group_id" {
+  description = "Security group ID for PostgreSQL."
+  value       = module.database.db_security_group_id
 }
 
 output "lambda_role_arn" {
