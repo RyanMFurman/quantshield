@@ -11,6 +11,12 @@ ec2_instance_type  = "t3.micro"
 database_name      = "quantshield"
 rds_instance_class = "db.t4g.micro"
 
+# Enable only when you want Terraform to load sql/seed_data.sql into dev RDS.
+initialize_seed_data = false
+
+# Use an absolute path on Windows if psql is not available on PATH.
+# psql_command = "C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe"
+
 # Documentation-only placeholder from RFC 5737. Replace with your trusted /32 or VPN CIDR.
 admin_cidr = "203.0.113.10/32"
 

@@ -1,6 +1,7 @@
 locals {
   name_prefix      = "${var.project_name}-${var.environment}"
   schema_file_path = var.schema_file_path != null ? var.schema_file_path : abspath("${path.root}/../../../sql/schema.sql")
+  seed_file_path   = var.seed_file_path != null ? var.seed_file_path : abspath("${path.root}/../../../sql/seed_data.sql")
 }
 
 # Security group keeps PostgreSQL reachable for issue #3 validation while limiting
@@ -92,7 +93,31 @@ resource "terraform_data" "schema" {
       $secretJson = aws secretsmanager get-secret-value --secret-id '${aws_db_instance.this.master_user_secret[0].secret_arn}' --query SecretString --output text
       $secret = $secretJson | ConvertFrom-Json
       $env:PGPASSWORD = $secret.password
-      psql -h '${aws_db_instance.this.address}' -p '${aws_db_instance.this.port}' -U '${var.master_username}' -d '${var.database_name}' -v ON_ERROR_STOP=1 -f '${local.schema_file_path}'
+      $psql = '${var.psql_command}'
+      & $psql -h '${aws_db_instance.this.address}' -p '${aws_db_instance.this.port}' -U '${var.master_username}' -d '${var.database_name}' -v ON_ERROR_STOP=1 -f '${local.schema_file_path}'
+    EOT
+  }
+}
+
+# Optional dev/test data load. Keep disabled for production-like environments.
+resource "terraform_data" "seed" {
+  count = var.initialize_seed_data ? 1 : 0
+
+  triggers_replace = [
+    aws_db_instance.this.id,
+    filesha256(local.seed_file_path)
+  ]
+
+  depends_on = [terraform_data.schema]
+
+  provisioner "local-exec" {
+    interpreter = ["PowerShell", "-NoProfile", "-Command"]
+    command     = <<-EOT
+      $secretJson = aws secretsmanager get-secret-value --secret-id '${aws_db_instance.this.master_user_secret[0].secret_arn}' --query SecretString --output text
+      $secret = $secretJson | ConvertFrom-Json
+      $env:PGPASSWORD = $secret.password
+      $psql = '${var.psql_command}'
+      & $psql -h '${aws_db_instance.this.address}' -p '${aws_db_instance.this.port}' -U '${var.master_username}' -d '${var.database_name}' -v ON_ERROR_STOP=1 -f '${local.seed_file_path}'
     EOT
   }
 }

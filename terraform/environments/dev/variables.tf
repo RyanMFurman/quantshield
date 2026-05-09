@@ -64,6 +64,18 @@ variable "rds_instance_class" {
   default     = "db.t4g.micro"
 }
 
+variable "initialize_seed_data" {
+  description = "Whether to load sql/seed_data.sql into the dev database after schema initialization."
+  type        = bool
+  default     = false
+}
+
+variable "psql_command" {
+  description = "psql executable used by Terraform when initializing the RDS schema and optional seed data."
+  type        = string
+  default     = "psql"
+}
+
 variable "lambda_function_names" {
   # Drives the Lambda log policy scope in the IAM module.
   description = "Lambda function names allowed to use the dev Lambda execution role."

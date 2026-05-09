@@ -100,10 +100,28 @@ variable "initialize_schema" {
   default     = true
 }
 
+variable "initialize_seed_data" {
+  description = "Whether Terraform should run seed_data.sql after the schema is initialized. Intended for dev/testing only."
+  type        = bool
+  default     = false
+}
+
 variable "schema_file_path" {
   description = "Optional absolute path to the SQL schema file. Defaults to the repo-level sql/schema.sql from the dev environment."
   type        = string
   default     = null
+}
+
+variable "seed_file_path" {
+  description = "Optional absolute path to the SQL seed file. Defaults to the repo-level sql/seed_data.sql from the dev environment."
+  type        = string
+  default     = null
+}
+
+variable "psql_command" {
+  description = "psql executable used by local-exec schema and seed initialization. Use an absolute path on Windows when psql is not on PATH."
+  type        = string
+  default     = "psql"
 }
 
 variable "common_tags" {

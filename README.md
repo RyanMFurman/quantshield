@@ -112,9 +112,12 @@ Security groups
 Apply / destroy tested
 Branch protections enabled
 Team workflow established
+PostgreSQL Data Layer
+RDS PostgreSQL provisioned with Terraform
+Schema initialization verified against AWS RDS
+Seed data loaded and verified in security_events
 In Progress
 IAM module
-RDS PostgreSQL layer
 API foundation
 Detection engine
 Planned

@@ -14,6 +14,14 @@ Creates a PostgreSQL RDS instance for QuantShield and initializes the applicatio
 When `initialize_schema = true`, Terraform runs `sql/schema.sql` after the database is created. The local machine or CI runner applying Terraform must have:
 
 - AWS CLI authenticated to read the RDS-managed secret.
-- `psql` installed and available on `PATH`.
+- `psql` installed and available on `PATH`, or `psql_command` set to an absolute executable path.
 
 The schema creates the foundational QuantShield tables, including `market_prices`, `security_events`, `alerts`, and `incidents`, plus supporting indexes.
+
+For Windows workstations where PostgreSQL command line tools are installed but not on `PATH`, set:
+
+```hcl
+psql_command = "C:\\Program Files\\PostgreSQL\\18\\bin\\psql.exe"
+```
+
+Set `initialize_seed_data = true` in a dev tfvars file to load `sql/seed_data.sql` after the schema is initialized. The seed file is PostgreSQL SQL and should be applied through `psql` against the RDS PostgreSQL endpoint, not a SQL Server/T-SQL query editor.

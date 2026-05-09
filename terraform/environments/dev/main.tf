@@ -23,14 +23,16 @@ module "networking" {
 module "database" {
   source = "../../modules/database"
 
-  project_name        = var.project_name
-  environment         = var.environment
-  vpc_id              = module.networking.vpc_id
-  subnet_ids          = module.networking.public_subnet_ids
-  allowed_cidr_blocks = [var.admin_cidr]
-  database_name       = var.database_name
-  instance_class      = var.rds_instance_class
-  common_tags         = local.common_tags
+  project_name         = var.project_name
+  environment          = var.environment
+  vpc_id               = module.networking.vpc_id
+  subnet_ids           = module.networking.public_subnet_ids
+  allowed_cidr_blocks  = [var.admin_cidr]
+  database_name        = var.database_name
+  instance_class       = var.rds_instance_class
+  initialize_seed_data = var.initialize_seed_data
+  psql_command         = var.psql_command
+  common_tags          = local.common_tags
 }
 
 # Creates least-privilege workload roles and a GitHub Actions deploy role for dev.
