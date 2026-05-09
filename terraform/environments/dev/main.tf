@@ -9,13 +9,28 @@ locals {
 module "networking" {
   source = "../../modules/networking"
 
-  project_name       = var.project_name
-  environment        = var.environment
-  vpc_cidr           = var.vpc_cidr
-  public_subnet_cidr = var.public_subnet_cidr
-  availability_zone  = var.availability_zone
-  admin_cidr         = var.admin_cidr
-  common_tags        = local.common_tags
+  project_name                 = var.project_name
+  environment                  = var.environment
+  vpc_cidr                     = var.vpc_cidr
+  public_subnet_cidr           = var.public_subnet_cidr
+  availability_zone            = var.availability_zone
+  secondary_public_subnet_cidr = var.secondary_public_subnet_cidr
+  secondary_availability_zone  = var.secondary_availability_zone
+  admin_cidr                   = var.admin_cidr
+  common_tags                  = local.common_tags
+}
+
+module "database" {
+  source = "../../modules/database"
+
+  project_name        = var.project_name
+  environment         = var.environment
+  vpc_id              = module.networking.vpc_id
+  subnet_ids          = module.networking.public_subnet_ids
+  allowed_cidr_blocks = [var.admin_cidr]
+  database_name       = var.database_name
+  instance_class      = var.rds_instance_class
+  common_tags         = local.common_tags
 }
 
 # Creates least-privilege workload roles and a GitHub Actions deploy role for dev.

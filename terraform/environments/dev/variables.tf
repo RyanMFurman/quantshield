@@ -28,6 +28,18 @@ variable "availability_zone" {
   default     = "us-east-1a"
 }
 
+variable "secondary_public_subnet_cidr" {
+  description = "CIDR block for the secondary dev public subnet."
+  type        = string
+  default     = "10.10.2.0/24"
+}
+
+variable "secondary_availability_zone" {
+  description = "Availability zone for the secondary dev public subnet."
+  type        = string
+  default     = "us-east-1b"
+}
+
 variable "admin_cidr" {
   description = "Trusted CIDR block allowed to SSH to EC2 instances. Replace the example value before planning real infrastructure."
   type        = string
@@ -38,6 +50,18 @@ variable "ec2_instance_type" {
   description = "Instance type for the temporary dev web reachability test instance."
   type        = string
   default     = "t3.micro"
+}
+
+variable "database_name" {
+  description = "Initial PostgreSQL database name for dev."
+  type        = string
+  default     = "quantshield"
+}
+
+variable "rds_instance_class" {
+  description = "RDS PostgreSQL instance class for dev."
+  type        = string
+  default     = "db.t4g.micro"
 }
 
 variable "lambda_function_names" {

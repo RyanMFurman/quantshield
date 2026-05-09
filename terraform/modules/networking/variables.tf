@@ -23,6 +23,18 @@ variable "availability_zone" {
   type        = string
 }
 
+variable "secondary_public_subnet_cidr" {
+  description = "CIDR block for the secondary public subnet used by services that require multiple AZs."
+  type        = string
+  default     = null
+}
+
+variable "secondary_availability_zone" {
+  description = "Availability zone for the secondary public subnet."
+  type        = string
+  default     = null
+}
+
 variable "admin_cidr" {
   description = "Trusted CIDR block allowed to SSH to EC2 instances."
   type        = string
