@@ -1,0 +1,1 @@
+"""QuantShield application package."""
