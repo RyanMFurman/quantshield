@@ -32,34 +32,3 @@ def fetch_all(query: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         with conn.cursor() as cursor:
             cursor.execute(query, params)
             return list(cursor.fetchall())
-
-
-def fetch_one(query: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, params)
-            return cursor.fetchone()
-
-
-def execute(query: str, params: tuple[Any, ...] = ()) -> None:
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, params)
-
-
-def execute_many(query: str, params_seq: list[tuple[Any, ...]]) -> None:
-    if not params_seq:
-        return
-
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.executemany(query, params_seq)
-
-
-def insert_returning(
-    query: str, params: tuple[Any, ...] = ()
-) -> dict[str, Any] | None:
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, params)
-            return cursor.fetchone()
