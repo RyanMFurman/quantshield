@@ -51,6 +51,7 @@ This is not a tutorial CRUD app. It is a full-stack cloud security platform desi
 - PostgreSQL relational datastore
 - Python ingestion pipelines
 - Alert + incident tracking
+- API skeleton exposes `/health`, `/market/latest`, and `/alerts/active`
 
 ### Dashboard & Visibility
 
@@ -58,6 +59,7 @@ This is not a tutorial CRUD app. It is a full-stack cloud security platform desi
 - Live alerts
 - Compliance metrics
 - Security telemetry views
+- Skeleton dashboard consumes FastAPI endpoints with graceful empty states
 
 ### DevOps Workflow
 
@@ -65,115 +67,162 @@ This is not a tutorial CRUD app. It is a full-stack cloud security platform desi
 - Feature branch development model
 - Pull request approvals
 - GitHub Actions CI/CD pipeline
+- Python API smoke tests and Terraform validation workflows
 
 ---
 
 ## High-Level Architecture
 
 ```text
-                    ┌────────────────────┐
-                    │   Streamlit UI     │
-                    │ FastAPI Backend    │
-                    └─────────┬──────────┘
-                              │
-                              ▼
-                    ┌────────────────────┐
-                    │ PostgreSQL (RDS)   │
-                    │ Alerts / Events    │
-                    └─────────┬──────────┘
-                              │
-         ┌────────────────────┼────────────────────┐
-         ▼                    ▼                    ▼
-┌────────────────┐   ┌────────────────┐   ┌────────────────┐
-│ Market Ingest  │   │ Detection Eng. │   │ Incident Resp. │
-│ Python / Lambda│   │ Rules Engine   │   │ Auto Actions   │
-└────────────────┘   └────────────────┘   └────────────────┘
-         ▲
-         │
-┌────────────────────────────────────────────┐
-│ AWS Logs / CloudTrail / GuardDuty / Events │
-└────────────────────────────────────────────┘
+                    +--------------------+
+                    |    Streamlit UI    |
+                    |  FastAPI Backend   |
+                    +---------+----------+
+                              |
+                              v
+                    +--------------------+
+                    | PostgreSQL (RDS)   |
+                    | Alerts / Events    |
+                    +---------+----------+
+                              |
+          +-------------------+-------------------+
+          |                   |                   |
+          v                   v                   v
++----------------+  +----------------+  +----------------+
+| Market Ingest  |  | Detection Eng. |  | Incident Resp. |
+| Python/Lambda  |  | Rules Engine   |  | Auto Actions   |
++----------------+  +----------------+  +----------------+
+          ^
+          |
++----------------------------------------------+
+| AWS Logs / CloudTrail / GuardDuty / Events   |
++----------------------------------------------+
+```
 
-Technology Stack
-Layer	Technology
-Cloud	AWS
-IaC	Terraform
-Backend	Python / FastAPI
-Database	PostgreSQL
-Dashboard	Streamlit
-Containers	Docker
-CI/CD	GitHub Actions
-Security	IAM / CloudTrail / GuardDuty
-Current Progress
-Completed
-Terraform networking module
-VPC + subnet + routing
-Security groups
-Apply / destroy tested
-Branch protections enabled
-Team workflow established
-PostgreSQL Data Layer
-RDS PostgreSQL provisioned with Terraform
-Schema initialization verified against AWS RDS
-Seed data loaded and verified in security_events
-In Progress
-IAM module
-API foundation
-Detection engine
-Planned
-Streamlit dashboard
-GuardDuty integrations
-GitHub Actions pipelines
-Public live deployment
-Repository Structure
+## Technology Stack
+
+| Layer | Technology |
+| --- | --- |
+| Cloud | AWS |
+| IaC | Terraform |
+| Backend | Python / FastAPI |
+| Database | PostgreSQL |
+| Dashboard | Streamlit |
+| Containers | Docker |
+| CI/CD | GitHub Actions |
+| Security | IAM / CloudTrail / GuardDuty |
+
+## API Quickstart
+
+Install dependencies:
+
+```powershell
+pip install -r requirements.txt
+```
+
+Run the FastAPI app:
+
+```powershell
+uvicorn src.api.main:app --reload
+```
+
+Available routes:
+
+- `GET /health`
+- `GET /market/latest`
+- `GET /alerts/active`
+
+Run the Streamlit dashboard:
+
+```powershell
+streamlit run src/api/dashboard.py
+```
+
+Set `DATABASE_URL` to query PostgreSQL-backed routes. Without it, data routes return empty results with `database_configured = false`.
+Set `QUANTSHIELD_API_URL` if the Streamlit dashboard should point at a non-local FastAPI service.
+
+## Current Progress
+
+### Completed
+
+- Terraform networking module
+- VPC, subnet, routing, and security groups
+- Apply and destroy tested
+- Branch protections enabled
+- Team workflow established
+- PostgreSQL data layer
+- RDS PostgreSQL provisioned with Terraform
+- Schema initialization verified against AWS RDS
+- Seed data loaded and verified in `security_events`
+- FastAPI backend skeleton
+- Health, market latest, and active alerts routes
+- Streamlit dashboard skeleton
+- GitHub Actions Python and Terraform validation workflows
+
+### In Progress
+
+- IAM module
+- Detection engine
+
+### Planned
+
+- GuardDuty integrations
+- Public live deployment
+
+## Repository Structure
+
+```text
 quantshield/
-├── terraform/
-│   ├── environments/
-│   └── modules/
-├── src/
-│   ├── api/
-│   ├── ingestion/
-│   ├── detection/
-│   └── response/
-├── sql/
-├── docs/
-├── tests/
-└── .github/workflows/
-Engineering Workflow
+  .github/workflows/
+  terraform/
+  src/
+  sql/
+  docs/
+  tests/
+```
+
+## Engineering Workflow
+
 1 Issue = 1 Branch = 1 Pull Request
 
 Example:
 
+```text
 feature/networking-module
 feature/iam-module
 feature/rds-module
 feature/detection-engine
+```
 
-All changes require review before merge into main.
+All changes require review before merge into `main`.
 
-Security Principles
-Least privilege IAM
-No secrets committed
-Protected main branch
-Infrastructure version control
-Controlled cloud deployments
-Audit visibility through logs
-Roadmap
- Networking Foundation
- IAM Architecture
- PostgreSQL Data Layer
- FastAPI Backend
- Detection Rules Engine
- Dashboard UI
- CI/CD Automation
- Public Demo Deployment
-Author
+## Security Principles
 
-Ryan Furman
+- Least privilege IAM
+- No secrets committed
+- Protected main branch
+- Infrastructure version control
+- Controlled cloud deployments
+- Audit visibility through logs
+
+## Roadmap
+
+- Networking Foundation
+- IAM Architecture
+- PostgreSQL Data Layer
+- FastAPI Backend
+- Detection Rules Engine
+- Dashboard UI
+- CI/CD Automation
+- Public Demo Deployment
+
+## Author
+
+Ryan Furman  
 Cloud / DevOps / Infrastructure Engineering
 
 Collaborative project with security engineering contributions.
 
-Disclaimer
+## Disclaimer
 
-QuantShield is a simulated educational and portfolio environment designed to demonstrate engineering capability. It is not connected to live financial systems. 
+QuantShield is a simulated educational and portfolio environment designed to demonstrate engineering capability. It is not connected to live financial systems.
