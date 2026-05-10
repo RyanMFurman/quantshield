@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 from fastapi.testclient import TestClient
 
+from src.api.config import get_settings
 from src.api.main import app
 
 
@@ -11,6 +13,15 @@ class ApiRoutesTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.client = TestClient(app)
+
+    def setUp(self) -> None:
+        self.original_database_url = os.environ.pop("DATABASE_URL", None)
+        get_settings.cache_clear()
+
+    def tearDown(self) -> None:
+        if self.original_database_url is not None:
+            os.environ["DATABASE_URL"] = self.original_database_url
+        get_settings.cache_clear()
 
     def test_health_returns_service_metadata(self) -> None:
         response = self.client.get("/health")
