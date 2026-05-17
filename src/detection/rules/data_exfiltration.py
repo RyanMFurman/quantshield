@@ -6,19 +6,19 @@ from typing import Any
 
 
 @dataclass(frozen=True)
-class LateralMovementConfig:
-    window_minutes: int = 20
-    distinct_ip_threshold: int = 3
-    rule_id: str = "LATERAL_MOVE_001"
-    rule_name: str = "Potential Lateral Movement via Multi-Host Access"
-    severity: str = "P2"
-    mitre_tactic: str = "Lateral Movement"
-    mitre_technique: str = "T1021"
+class DataExfiltrationConfig:
+    window_minutes: int = 15
+    object_count_threshold: int = 20
+    rule_id: str = "DATA_EXFIL_001"
+    rule_name: str = "Potential Data Exfiltration via S3 Object Access"
+    severity: str = "P1"
+    mitre_tactic: str = "Exfiltration"
+    mitre_technique: str = "T1567"
 
 
-class LateralMovementRule:
-    def __init__(self, config: LateralMovementConfig | None = None) -> None:
-        self.config = config or LateralMovementConfig()
+class DataExfiltrationRule:
+    def __init__(self, config: DataExfiltrationConfig | None = None) -> None:
+        self.config = config or DataExfiltrationConfig()
 
     def evaluate(
         self, events: list[dict[str, Any]], now: datetime | None = None
@@ -26,31 +26,26 @@ class LateralMovementRule:
         current_time = now or datetime.now(timezone.utc)
         window_start = current_time - timedelta(minutes=self.config.window_minutes)
 
-        user_ip_map: dict[str, set[str]] = {}
+        download_counts: dict[tuple[str, str], int] = {}
 
         for event in events:
             if not self._is_recent_event(event, window_start):
                 continue
 
-            event_type = str(event.get("event_type") or "")
-            if event_type not in {"AssumeRole", "ConsoleLogin", "SSMStartSession"}:
-                continue
-
-            result = str(event.get("result") or "")
-            if result and result != "Success":
+            if str(event.get("event_type") or "") != "GetObject":
                 continue
 
             username = str(event.get("username") or "unknown")
             source_ip = str(event.get("source_ip") or "unknown")
-            user_ip_map.setdefault(username, set()).add(source_ip)
+            key = (username, source_ip)
+            download_counts[key] = download_counts.get(key, 0) + 1
 
         alerts: list[dict[str, Any]] = []
 
-        for username, unique_ips in user_ip_map.items():
-            if len(unique_ips) < self.config.distinct_ip_threshold:
+        for (username, source_ip), count in download_counts.items():
+            if count < self.config.object_count_threshold:
                 continue
 
-            sorted_ips = sorted(unique_ips)
             alerts.append(
                 {
                     "rule_id": self.config.rule_id,
@@ -59,10 +54,10 @@ class LateralMovementRule:
                     "mitre_tactic": self.config.mitre_tactic,
                     "mitre_technique": self.config.mitre_technique,
                     "affected_user": username,
-                    "source_ip": sorted_ips[0],
+                    "source_ip": source_ip,
                     "description": (
-                        f"User {username} accessed from {len(unique_ips)} unique source IPs "
-                        f"within {self.config.window_minutes} minutes: {', '.join(sorted_ips)}"
+                        f"{count} S3 GetObject requests detected for {username} from {source_ip} "
+                        f"within {self.config.window_minutes} minutes"
                     ),
                     "triggered_at": current_time,
                     "status": "OPEN",

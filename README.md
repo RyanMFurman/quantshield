@@ -13,13 +13,22 @@ Cloud-Native Financial Security Operations Platform built with AWS, Terraform, P
 
 QuantShield simulates a cloud SOC for a boutique quantitative trading firm. The platform combines real infrastructure, telemetry, detection logic, and operational APIs into a production-style portfolio system.
 
-### Detection and Security (Current)
+## Noah SOC Scope
 
-- Brute-force detection rule (MITRE T1110)
-- Privilege escalation detection rule (MITRE T1078.004)
-- Deduplication of OPEN alerts
-- DB-backed detection cycle (read events -> evaluate rules -> insert alerts)
-- Active alerts API endpoint
+Implemented detection-and-response core focused on cloud SOC workflows:
+
+- Detection engine with DB cycle support: read events, evaluate rules, deduplicate OPEN alerts, write alerts
+- MITRE-mapped rules:
+  - Brute force (`T1110`)
+  - Privilege escalation (`T1078.004`)
+  - Lateral movement (`T1021`)
+  - Data exfiltration (`T1567`)
+- Minimal incident response hook for P1 alerts (structured response actions for triage)
+- API visibility for SOC operations:
+  - Active alerts
+  - Recent security events
+  - Detection summary by rule and severity
+- Unit tests for rule behavior, dedup logic, responder behavior, and DB-cycle smoke path
 
 ## API Quickstart
 
@@ -36,8 +45,10 @@ Available routes:
 - `GET /market/latest`
 - `GET /alerts/active`
 - `GET /api/v1/alerts/active`
+- `GET /api/v1/events/recent`
+- `GET /api/v1/detections/summary`
 
-Set `DATABASE_URL` for API DB routes.
+Set `DATABASE_URL` for DB-backed routes.
 
 ## Detection Engine Quickstart
 
@@ -47,10 +58,23 @@ Run local demo (no DB required):
 python3 scripts/run_detection_demo.py
 ```
 
-Run tests:
+Run detection engine DB cycle (requires `DATABASE_URL`):
 
 ```bash
-python3 -m pytest -q tests/test_detection_engine.py
+python3 scripts/run_detection_db_cycle.py
+```
+
+Expected output fields include:
+
+- `events_evaluated`
+- `alerts_generated`
+- `alerts_inserted`
+- `response_actions_triggered`
+
+## Tests
+
+```bash
+python3 -m pytest -q tests/test_detection_engine.py tests/test_api.py
 ```
 
 ## Current Progress
@@ -60,8 +84,8 @@ python3 -m pytest -q tests/test_detection_engine.py
 - Terraform networking foundation
 - PostgreSQL schema + seed data
 - FastAPI backend skeleton routes
-- Detection engine phase 1 (2 rules + dedup + DB cycle)
-- Detection unit tests
+- Detection engine phase 2 (4 rules + dedup + DB cycle + response hook)
+- Detection and API tests
 
 ### In Progress
 

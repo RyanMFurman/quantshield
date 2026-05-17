@@ -7,12 +7,21 @@ from typing import Any
 import psycopg
 
 from src.detection.rules.brute_force import BruteForceRule
+from src.detection.rules.data_exfiltration import DataExfiltrationRule
+from src.detection.rules.lateral_movement import LateralMovementRule
 from src.detection.rules.privilege_escalation import PrivilegeEscalationRule
+from src.response.incident_responder import IncidentResponder
 
 
 class DetectionEngine:
     def __init__(self) -> None:
-        self.rules = [BruteForceRule(), PrivilegeEscalationRule()]
+        self.rules = [
+            BruteForceRule(),
+            PrivilegeEscalationRule(),
+            LateralMovementRule(),
+            DataExfiltrationRule(),
+        ]
+        self.responder = IncidentResponder()
 
     def run(
         self,
@@ -47,11 +56,13 @@ class DetectionEngine:
                     inserted_count = self._insert_alerts(cur, new_alerts)
 
             conn.commit()
+        response_actions = self.responder.handle_alerts(new_alerts)
 
         return {
             "events_evaluated": len(events),
             "alerts_generated": len(new_alerts),
             "alerts_inserted": inserted_count,
+            "response_actions_triggered": len(response_actions),
         }
 
     @staticmethod

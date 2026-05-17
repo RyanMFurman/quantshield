@@ -46,3 +46,29 @@ class Alert(BaseModel):
 class ActiveAlertsResponse(BaseModel):
     database_configured: bool
     items: list[Alert]
+
+
+class SecurityEvent(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    event_type: str
+    source_ip: str | None = None
+    username: str | None = None
+    result: str | None = None
+    occurred_at: datetime
+
+
+class SecurityEventsResponse(BaseModel):
+    database_configured: bool
+    items: list[SecurityEvent]
+
+
+class AlertSummaryItem(BaseModel):
+    rule_id: str
+    severity: str
+    open_count: int
+
+
+class AlertSummaryResponse(BaseModel):
+    database_configured: bool
+    items: list[AlertSummaryItem]
