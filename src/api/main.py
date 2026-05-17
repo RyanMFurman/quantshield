@@ -84,3 +84,8 @@ def active_alerts() -> ActiveAlertsResponse:
         ) from exc
 
     return ActiveAlertsResponse(database_configured=True, items=rows)
+
+
+@app.get("/api/v1/alerts/active", response_model=ActiveAlertsResponse, tags=["alerts"])
+def active_alerts_v1() -> ActiveAlertsResponse:
+    return active_alerts()
