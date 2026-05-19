@@ -47,6 +47,24 @@ class ApiRoutesTestCase(unittest.TestCase):
             {"database_configured": False, "items": []},
         )
 
+    def test_recent_events_returns_empty_state_without_database(self) -> None:
+        response = self.client.get("/api/v1/events/recent")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"database_configured": False, "items": []},
+        )
+
+    def test_detection_summary_returns_empty_state_without_database(self) -> None:
+        response = self.client.get("/api/v1/detections/summary")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"database_configured": False, "items": []},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
