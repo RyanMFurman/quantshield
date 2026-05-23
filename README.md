@@ -65,12 +65,20 @@ Run detection engine DB cycle (requires `DATABASE_URL`):
 python3 scripts/run_detection_db_cycle.py
 ```
 
+Run insider-risk analysis DB cycle (requires `DATABASE_URL`):
+
+```bash
+python3 scripts/run_insider_risk_analysis.py
+```
+
 Expected output fields include:
 
 - `events_evaluated`
 - `alerts_generated`
 - `alerts_inserted`
 - `response_actions_triggered`
+- `findings_generated`
+- `findings_inserted`
 
 ## Tests
 
