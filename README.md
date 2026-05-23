@@ -71,6 +71,12 @@ Run insider-risk analysis DB cycle (requires `DATABASE_URL`):
 python3 scripts/run_insider_risk_analysis.py
 ```
 
+Seed the live demo scenario and run both detection cycles (requires `DATABASE_URL`):
+
+```bash
+python3 scripts/seed_live_demo_data.py
+```
+
 Expected output fields include:
 
 - `events_evaluated`
@@ -79,6 +85,8 @@ Expected output fields include:
 - `response_actions_triggered`
 - `findings_generated`
 - `findings_inserted`
+- `market_rows_inserted`
+- `security_events_upserted`
 
 ## Tests
 
