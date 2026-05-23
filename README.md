@@ -47,6 +47,7 @@ Available routes:
 - `GET /api/v1/alerts/active`
 - `GET /api/v1/events/recent`
 - `GET /api/v1/detections/summary`
+- `GET /api/v1/insider-risk`
 
 Set `DATABASE_URL` for DB-backed routes.
 

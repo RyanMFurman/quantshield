@@ -50,6 +50,26 @@ CREATE TABLE IF NOT EXISTS alerts (
 CREATE INDEX IF NOT EXISTS idx_alerts_status_time
 ON alerts (status, triggered_at DESC);
 
+CREATE TABLE IF NOT EXISTS insider_risk_findings (
+    id BIGSERIAL PRIMARY KEY,
+    symbol VARCHAR(20) NOT NULL,
+    risk_score NUMERIC(5,2) NOT NULL CHECK (risk_score >= 0 AND risk_score <= 100),
+    severity VARCHAR(10) NOT NULL CHECK (severity IN ('P1','P2','P3','P4')),
+    affected_user VARCHAR(255),
+    source_ip INET,
+    market_signal VARCHAR(100),
+    related_event_count INT NOT NULL DEFAULT 0 CHECK (related_event_count >= 0),
+    reason TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN','ACK','RESOLVED','FP')),
+    detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_insider_risk_status_time
+ON insider_risk_findings (status, detected_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_insider_risk_symbol_time
+ON insider_risk_findings (symbol, detected_at DESC);
+
 CREATE TABLE IF NOT EXISTS incidents (
     id BIGSERIAL PRIMARY KEY,
     incident_code VARCHAR(40) NOT NULL UNIQUE,

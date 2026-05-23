@@ -65,6 +65,15 @@ class ApiRoutesTestCase(unittest.TestCase):
             {"database_configured": False, "items": []},
         )
 
+    def test_insider_risk_returns_empty_state_without_database(self) -> None:
+        response = self.client.get("/api/v1/insider-risk")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"database_configured": False, "items": []},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
