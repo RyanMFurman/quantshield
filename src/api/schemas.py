@@ -72,3 +72,24 @@ class AlertSummaryItem(BaseModel):
 class AlertSummaryResponse(BaseModel):
     database_configured: bool
     items: list[AlertSummaryItem]
+
+
+class InsiderRiskFinding(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    symbol: str
+    risk_score: Decimal
+    severity: str
+    affected_user: str | None = None
+    source_ip: str | None = None
+    market_signal: str | None = None
+    related_event_count: int
+    reason: str
+    status: str
+    detected_at: datetime
+
+
+class InsiderRiskResponse(BaseModel):
+    database_configured: bool
+    items: list[InsiderRiskFinding]

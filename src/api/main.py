@@ -8,6 +8,7 @@ from src.api.schemas import (
     ActiveAlertsResponse,
     AlertSummaryResponse,
     HealthResponse,
+    InsiderRiskResponse,
     MarketLatestResponse,
     SecurityEventsResponse,
 )
@@ -145,3 +146,38 @@ def detection_summary() -> AlertSummaryResponse:
         ) from exc
 
     return AlertSummaryResponse(database_configured=True, items=rows)
+
+
+@app.get("/api/v1/insider-risk", response_model=InsiderRiskResponse, tags=["risk"])
+def insider_risk_findings(limit: int = 50) -> InsiderRiskResponse:
+    safe_limit = max(1, min(limit, 200))
+    query = """
+        SELECT
+            id,
+            symbol,
+            risk_score,
+            severity,
+            affected_user,
+            source_ip::text AS source_ip,
+            market_signal,
+            related_event_count,
+            reason,
+            status,
+            detected_at
+        FROM insider_risk_findings
+        WHERE status IN ('OPEN', 'ACK')
+        ORDER BY detected_at DESC
+        LIMIT %s
+    """
+
+    try:
+        rows = fetch_all(query, (safe_limit,))
+    except DatabaseUnavailable:
+        return InsiderRiskResponse(database_configured=False, items=[])
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to load insider risk findings",
+        ) from exc
+
+    return InsiderRiskResponse(database_configured=True, items=rows)
