@@ -91,6 +91,44 @@ api.example.com
 
 with the final public DNS names.
 
+## HTTPS
+
+Point DNS records at the app host public IP before requesting certificates:
+
+```text
+demo.example.com -> app host public IP
+api.example.com  -> app host public IP
+```
+
+Install Certbot:
+
+```bash
+sudo dnf install -y certbot
+```
+
+Stop Nginx and request certificates with the standalone challenge:
+
+```bash
+sudo systemctl stop nginx
+sudo certbot certonly --standalone -d demo.example.com
+sudo certbot certonly --standalone -d api.example.com
+sudo systemctl start nginx
+```
+
+After certificates exist, copy `deploy/nginx/quantshield.conf.example`, replace
+the example domains, and reload Nginx:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Verify renewal:
+
+```bash
+sudo certbot renew --dry-run
+```
+
 ## Seed Demo Data
 
 After the schema exists and `DATABASE_URL` is set:
