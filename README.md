@@ -94,6 +94,11 @@ Expected output fields include:
 python3 -m pytest -q tests/test_detection_engine.py tests/test_api.py
 ```
 
+## Live Demo Deployment
+
+See `docs/live-demo-aws.md` for the EC2, Docker Compose, Nginx, and RDS-backed
+demo runbook.
+
 ## Current Progress
 
 ### Completed
