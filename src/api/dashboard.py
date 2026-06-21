@@ -192,6 +192,45 @@ def inject_styles() -> None:
         .qs-row:last-child {
             border-bottom: 0;
         }
+        .qs-table {
+            display: grid;
+            gap: 0;
+            margin-top: 8px;
+        }
+        .qs-table-row {
+            display: grid;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            font-size: 13px;
+            min-width: 0;
+        }
+        .qs-table-row:last-child {
+            border-bottom: 0;
+        }
+        .qs-iam-row {
+            grid-template-columns: 52px minmax(170px, 1.4fr) minmax(120px, .9fr) 128px;
+        }
+        .qs-risk-row {
+            grid-template-columns: 64px 52px 54px minmax(100px, 1fr);
+        }
+        .qs-cell {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .qs-rule {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+        }
+        .qs-source {
+            color: var(--qs-text);
+            text-align: right;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+        }
         .qs-muted {
             color: var(--qs-muted);
         }
@@ -251,6 +290,16 @@ def inject_styles() -> None:
                 grid-template-columns: 56px 60px minmax(0, 1fr);
             }
             .qs-row .qs-source {
+                display: none;
+            }
+            .qs-iam-row,
+            .qs-risk-row {
+                grid-template-columns: 52px minmax(0, 1fr);
+            }
+            .qs-iam-row .qs-user,
+            .qs-iam-row .qs-source,
+            .qs-risk-row .qs-score,
+            .qs-risk-row .qs-source {
                 display: none;
             }
         }
@@ -342,16 +391,18 @@ def render_overview(data: dict[str, dict[str, Any]]) -> None:
         rows = []
         for risk in risks[:5]:
             rows.append(
-                "<div class='qs-row'>"
-                f"<div>{escape(str(risk.get('symbol') or ''))}</div>"
-                f"<div>{as_float(risk.get('risk_score')):.0f}</div>"
-                f"<div><span class='sev {severity_class(risk.get('severity'))}'>{escape(str(risk.get('severity') or ''))}</span></div>"
-                f"<div class='qs-source'>{escape(clean_ip(risk.get('source_ip')))}</div>"
+                "<div class='qs-table-row qs-risk-row'>"
+                f"<div class='qs-cell'>{escape(str(risk.get('symbol') or ''))}</div>"
+                f"<div class='qs-cell qs-score'>{as_float(risk.get('risk_score')):.0f}</div>"
+                f"<div class='qs-cell'><span class='sev {severity_class(risk.get('severity'))}'>{escape(str(risk.get('severity') or ''))}</span></div>"
+                f"<div class='qs-cell qs-source'>{escape(clean_ip(risk.get('source_ip')))}</div>"
                 "</div>"
             )
         st.markdown(
             "<div class='qs-panel'><h3>Risk Queue</h3>"
+            + "<div class='qs-table'>"
             + ("".join(rows) if rows else "<div class='qs-muted'>No open findings.</div>")
+            + "</div>"
             + "</div>",
             unsafe_allow_html=True,
         )
@@ -483,25 +534,27 @@ def render_iam_risk(data: dict[str, dict[str, Any]]) -> None:
         unsafe_allow_html=True,
     )
 
-    left, right = st.columns((1.1, 1))
+    left, right = st.columns((1.35, 1))
     with left:
-        st.markdown("<div class='qs-panel'><h3>IAM Alert Queue</h3>", unsafe_allow_html=True)
+        rows = []
         if iam_alerts:
             for alert in iam_alerts[:5]:
-                st.markdown(
+                rows.append(
                     f"""
-                    <div class="qs-row">
-                      <div><span class="sev {severity_class(alert.get("severity"))}">{escape(str(alert.get("severity") or ""))}</span></div>
-                      <div>{escape(str(alert.get("rule_id") or ""))}</div>
-                      <div>{escape(str(alert.get("affected_user") or "unknown"))}</div>
-                      <div class="qs-source">{escape(clean_ip(alert.get("source_ip")))}</div>
+                    <div class="qs-table-row qs-iam-row">
+                      <div class="qs-cell"><span class="sev {severity_class(alert.get("severity"))}">{escape(str(alert.get("severity") or ""))}</span></div>
+                      <div class="qs-cell qs-rule">{escape(str(alert.get("rule_id") or ""))}</div>
+                      <div class="qs-cell qs-user">{escape(str(alert.get("affected_user") or "unknown"))}</div>
+                      <div class="qs-cell qs-source">{escape(clean_ip(alert.get("source_ip")))}</div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
+                    """
                 )
-        else:
-            st.markdown("<div class='qs-muted'>No IAM alerts are active.</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='qs-panel'><h3>IAM Alert Queue</h3><div class='qs-table'>"
+            + ("".join(rows) if rows else "<div class='qs-muted'>No IAM alerts are active.</div>")
+            + "</div></div>",
+            unsafe_allow_html=True,
+        )
 
     with right:
         timeline = "".join(
@@ -541,6 +594,16 @@ def render_market_feed(data: dict[str, dict[str, Any]]) -> None:
     if not items:
         st.info("No market prices are available.")
         return
+
+    st.markdown(
+        """
+        <div class="qs-panel">
+          <h3>Market Context</h3>
+          <div class="qs-muted">Supporting signal for the quant-firm scenario. IAM and research-data access remain the primary detection story.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.dataframe(
         [
@@ -620,7 +683,7 @@ def main() -> None:
     render_header(data)
 
     tab_overview, tab_iam, tab_risk, tab_alerts, tab_market, tab_events, tab_system = st.tabs(
-        ["Overview", "IAM Risk", "Insider Risk", "Alerts", "Market", "Events", "System"]
+        ["Overview", "IAM Risk", "Insider Risk", "Alerts", "Market Context", "Events", "System"]
     )
 
     with tab_overview:
