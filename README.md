@@ -9,9 +9,46 @@
 
 Cloud-Native Financial Security Operations Platform built with AWS, Terraform, Python, PostgreSQL, FastAPI, Streamlit, Docker, and GitHub Actions.
 
+## Live Demo
+
+Public demo URLs:
+
+- Dashboard: `https://demo.example.com`
+- API health: `https://api.example.com/health`
+- Insider risk API: `https://api.example.com/api/v1/insider-risk`
+
+Replace the example domains after the AWS host, DNS, and HTTPS setup are complete.
+
 ## What This Project Does
 
 QuantShield simulates a cloud SOC for a boutique quantitative trading firm. The platform combines real infrastructure, telemetry, detection logic, and operational APIs into a production-style portfolio system.
+
+The main demo story:
+
+> QuantShield detects unusual activity around NVDA: abnormal trading volume, failed login attempts from a trading-service account, and S3 data access from the same time window. The Market Insider Risk Analyzer correlates the activity and raises an insider-risk finding.
+
+## Live Demo Architecture
+
+```text
+Internet
+  |
+  v
+EC2 app host
+  |-- Nginx + HTTPS
+  |-- Docker Compose
+  |-- FastAPI API
+  |-- Streamlit SOC dashboard
+  |
+  v
+RDS PostgreSQL
+  |-- market_prices
+  |-- security_events
+  |-- alerts
+  |-- insider_risk_findings
+```
+
+The v1 live demo intentionally avoids NAT Gateway, ALB, autoscaling, and Kubernetes
+so the project can stay comfortable under a small monthly AWS budget.
 
 ## Noah SOC Scope
 
@@ -99,6 +136,13 @@ python3 -m pytest -q tests/test_detection_engine.py tests/test_api.py
 See `docs/live-demo-aws.md` for the EC2, Docker Compose, Nginx, and RDS-backed
 demo runbook. See `docs/live-rds-app-config.md` for live database and app
 environment configuration.
+
+## Resume Summary
+
+Built a cloud-native financial security operations platform using AWS, Terraform,
+Python, PostgreSQL, FastAPI, Docker, and Streamlit to simulate market telemetry
+ingestion, threat detection engineering, insider-risk analysis, and SOC-style
+incident workflows.
 
 ## Current Progress
 
