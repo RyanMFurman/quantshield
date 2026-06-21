@@ -540,14 +540,12 @@ def render_iam_risk(data: dict[str, dict[str, Any]]) -> None:
         if iam_alerts:
             for alert in iam_alerts[:5]:
                 rows.append(
-                    f"""
-                    <div class="qs-table-row qs-iam-row">
-                      <div class="qs-cell"><span class="sev {severity_class(alert.get("severity"))}">{escape(str(alert.get("severity") or ""))}</span></div>
-                      <div class="qs-cell qs-rule">{escape(str(alert.get("rule_id") or ""))}</div>
-                      <div class="qs-cell qs-user">{escape(str(alert.get("affected_user") or "unknown"))}</div>
-                      <div class="qs-cell qs-source">{escape(clean_ip(alert.get("source_ip")))}</div>
-                    </div>
-                    """
+                    "<div class='qs-table-row qs-iam-row'>"
+                    f"<div class='qs-cell'><span class='sev {severity_class(alert.get('severity'))}'>{escape(str(alert.get('severity') or ''))}</span></div>"
+                    f"<div class='qs-cell qs-rule'>{escape(str(alert.get('rule_id') or ''))}</div>"
+                    f"<div class='qs-cell qs-user'>{escape(str(alert.get('affected_user') or 'unknown'))}</div>"
+                    f"<div class='qs-cell qs-source'>{escape(clean_ip(alert.get('source_ip')))}</div>"
+                    "</div>"
                 )
         st.markdown(
             "<div class='qs-panel'><h3>IAM Alert Queue</h3><div class='qs-table'>"
