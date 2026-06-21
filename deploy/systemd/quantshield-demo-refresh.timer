@@ -1,0 +1,10 @@
+[Unit]
+Description=Run QuantShield demo data refresh every 15 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Unit=quantshield-demo-refresh.service
+
+[Install]
+WantedBy=timers.target

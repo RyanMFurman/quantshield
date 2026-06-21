@@ -1,0 +1,9 @@
+[Unit]
+Description=Refresh QuantShield demo data and detections
+Requires=docker.service
+After=docker.service quantshield-demo.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/quantshield
+ExecStart=/usr/bin/docker compose exec -T api python scripts/seed_live_demo_data.py

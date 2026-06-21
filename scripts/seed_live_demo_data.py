@@ -118,6 +118,22 @@ def seed_demo_data(db_url: str) -> dict[str, int]:
 
     with psycopg.connect(db_url) as conn:
         with conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM market_prices
+                WHERE symbol = ANY(%s)
+                  AND captured_at < NOW() - INTERVAL '2 hours'
+                """,
+                ([row[0] for row in MARKET_ROWS],),
+            )
+            cur.execute(
+                """
+                DELETE FROM insider_risk_findings
+                WHERE symbol = 'NVDA'
+                  AND status IN ('OPEN', 'ACK')
+                  AND reason LIKE 'NVDA showed%%'
+                """
+            )
             cur.executemany(
                 """
                 INSERT INTO market_prices (symbol, price, volume, prev_close, captured_at)
