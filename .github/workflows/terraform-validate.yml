@@ -37,3 +37,6 @@ jobs:
       - name: Validate Terraform
         working-directory: terraform/environments/dev
         run: terraform validate
+
+      - name: Lint IAM policies
+        run: python scripts/lint_iam_policies.py terraform

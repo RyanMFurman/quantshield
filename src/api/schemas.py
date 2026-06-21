@@ -52,6 +52,7 @@ class SecurityEvent(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     event_type: str
+    scenario: str | None = None
     source_ip: str | None = None
     username: str | None = None
     result: str | None = None
@@ -93,3 +94,36 @@ class InsiderRiskFinding(BaseModel):
 class InsiderRiskResponse(BaseModel):
     database_configured: bool
     items: list[InsiderRiskFinding]
+
+
+class AccessAnalyzerFinding(BaseModel):
+    source: str
+    finding_id: str
+    finding_type: str
+    resource: str
+    resource_type: str | None = None
+    status: str
+    principal: dict | None = None
+    condition: dict | None = None
+    created_at: datetime
+    description: str
+
+
+class AccessAnalyzerResponse(BaseModel):
+    aws_configured: bool
+    items: list[AccessAnalyzerFinding]
+    error: str | None = None
+
+
+class PermissionDriftItem(BaseModel):
+    role_name: str
+    granted_actions: list[str]
+    used_actions: list[str]
+    unused_actions: list[str]
+    used_percentage: float | None
+    recommendation: dict[str, list[str]]
+
+
+class PermissionDriftResponse(BaseModel):
+    database_configured: bool
+    items: list[PermissionDriftItem]

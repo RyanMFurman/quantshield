@@ -13,7 +13,9 @@ class LateralMovementConfig:
     rule_name: str = "Potential Lateral Movement via Multi-Host Access"
     severity: str = "P2"
     mitre_tactic: str = "Lateral Movement"
-    mitre_technique: str = "T1021"
+    # This cloud scenario is identity/role reuse across locations, not remote-service execution.
+    # Valid Accounts: Cloud Accounts is more defensible than T1021 for AWS role hopping.
+    mitre_technique: str = "T1078.004"
 
 
 class LateralMovementRule:

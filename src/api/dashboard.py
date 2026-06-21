@@ -29,6 +29,8 @@ def load_dashboard_data(api_base_url: str) -> dict[str, dict[str, Any]]:
         "events": "/api/v1/events/recent",
         "detections": "/api/v1/detections/summary",
         "insider_risk": "/api/v1/insider-risk",
+        "access_analyzer": "/api/v1/access-analyzer/findings",
+        "permission_drift": "/api/v1/permission-drift",
     }
 
     data: dict[str, dict[str, Any]] = {}
@@ -70,6 +72,19 @@ def severity_class(severity: Any) -> str:
     if level == "P2":
         return "sev-p2"
     return "sev-p3"
+
+
+def loaded_scenario(data: dict[str, dict[str, Any]]) -> str:
+    counts: dict[str, int] = {}
+    for event in items_for(data, "events"):
+        scenario = str(event.get("scenario") or "").strip()
+        if scenario:
+            counts[scenario] = counts.get(scenario, 0) + 1
+
+    if not counts:
+        return "unknown"
+
+    return max(counts.items(), key=lambda item: item[1])[0]
 
 
 def inject_styles() -> None:
@@ -379,10 +394,10 @@ def render_overview(data: dict[str, dict[str, Any]]) -> None:
 
     kpis = [
         render_kpi("Lab posture", "High" if top_risk >= 90 else "Elevated", "Driven by correlated market/security signals"),
-        render_kpi("Top risk score", f"{top_risk:.0f}", "NVDA scenario should hit 100 in demo data"),
+        render_kpi("Top risk score", f"{top_risk:.0f}", "Highest calculated finding score"),
         render_kpi("Insider-risk findings", str(len(risks)), f"{len(p1_risks)} P1 correlated risk finding(s)"),
         render_kpi("Active alerts", str(len(alerts)), f"{len(p1_alerts)} P1 alert(s), {len(alerts)} total"),
-        render_kpi("Telemetry", str(len(events)), f"{len(market)} tracked market symbols"),
+        render_kpi("Scenario", loaded_scenario(data), f"{len(events)} events, {len(market)} symbols"),
     ]
     st.markdown("<div class='qs-kpi-grid'>" + "".join(kpis) + "</div>", unsafe_allow_html=True)
 
@@ -437,7 +452,7 @@ def render_overview(data: dict[str, dict[str, Any]]) -> None:
             f"{len(events)} security events ingested",
             f"{len(alerts)} alert(s) open for analyst review",
             f"{len(risks)} insider-risk finding(s) correlated",
-            "Docker lab running locally",
+            "Local lab telemetry loaded",
         ]
         timeline = "".join(
             f"<div class='qs-timeline-item'>{escape(item)}</div>" for item in timeline_items
@@ -595,12 +610,77 @@ def render_iam_risk(data: dict[str, dict[str, Any]]) -> None:
         [
             {
                 "Event": event.get("event_type"),
+                "Scenario": event.get("scenario"),
                 "Principal": event.get("username"),
                 "Source IP": clean_ip(event.get("source_ip")),
                 "Result": event.get("result"),
                 "Occurred": event.get("occurred_at"),
             }
             for event in iam_events
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+
+def render_access_analyzer(data: dict[str, dict[str, Any]]) -> None:
+    source = data.get("access_analyzer", {})
+    payload = source.get("payload") or {}
+    if source.get("error"):
+        st.warning(f"Access Analyzer API unavailable: {source['error']}")
+        return
+
+    items = list(payload.get("items", []))
+    if not payload.get("aws_configured"):
+        st.info("Set ACCESS_ANALYZER_ARN and AWS_REGION to query live IAM Access Analyzer findings.")
+        return
+
+    if payload.get("error"):
+        st.warning(payload["error"])
+        return
+
+    if not items:
+        st.success("No active Access Analyzer findings returned for the configured analyzer.")
+        return
+
+    st.dataframe(
+        [
+            {
+                "Type": item.get("finding_type"),
+                "Resource": item.get("resource"),
+                "Resource Type": item.get("resource_type"),
+                "Status": item.get("status"),
+                "Created": item.get("created_at"),
+            }
+            for item in items
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+
+def render_permission_drift(data: dict[str, dict[str, Any]]) -> None:
+    source = data.get("permission_drift", {})
+    if source.get("error"):
+        st.warning(f"Permission drift unavailable: {source['error']}")
+        return
+
+    items = list((source.get("payload") or {}).get("items", []))
+    if not items:
+        st.info("No permission drift report is available.")
+        return
+
+    st.dataframe(
+        [
+            {
+                "Role": item.get("role_name"),
+                "Used %": "No usage data" if item.get("used_percentage") is None else item.get("used_percentage"),
+                "Granted": len(item.get("granted_actions") or []),
+                "Used": len(item.get("used_actions") or []),
+                "Unused": len(item.get("unused_actions") or []),
+                "Recommended removals": ", ".join((item.get("recommendation") or {}).get("remove_actions") or []),
+            }
+            for item in items
         ],
         use_container_width=True,
         hide_index=True,
@@ -705,8 +785,28 @@ def main() -> None:
     data = load_dashboard_data(api_base_url)
     render_header(data)
 
-    tab_overview, tab_iam, tab_risk, tab_alerts, tab_market, tab_events, tab_system = st.tabs(
-        ["Overview", "IAM Risk", "Insider Risk", "Alerts", "Market Context", "Events", "System"]
+    (
+        tab_overview,
+        tab_iam,
+        tab_access_analyzer,
+        tab_permission_drift,
+        tab_risk,
+        tab_alerts,
+        tab_market,
+        tab_events,
+        tab_system,
+    ) = st.tabs(
+        [
+            "Overview",
+            "IAM Risk",
+            "Access Analyzer",
+            "Permission Drift",
+            "Insider Risk",
+            "Alerts",
+            "Market Context",
+            "Events",
+            "System",
+        ]
     )
 
     with tab_overview:
@@ -714,6 +814,12 @@ def main() -> None:
 
     with tab_iam:
         render_iam_risk(data)
+
+    with tab_access_analyzer:
+        render_access_analyzer(data)
+
+    with tab_permission_drift:
+        render_permission_drift(data)
 
     with tab_risk:
         render_insider_risk(data)

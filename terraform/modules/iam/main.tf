@@ -31,6 +31,15 @@ locals {
   )
 }
 
+resource "aws_accessanalyzer_analyzer" "account" {
+  analyzer_name = "${local.name_prefix}-access-analyzer"
+  type          = "ACCOUNT"
+
+  tags = merge(var.common_tags, {
+    Name = "${local.name_prefix}-access-analyzer"
+  })
+}
+
 # Creates the GitHub Actions OIDC provider only when the account does not already manage one elsewhere.
 resource "aws_iam_openid_connect_provider" "github" {
   count = var.github_oidc_provider_arn == null ? 1 : 0
@@ -142,7 +151,12 @@ data "aws_iam_policy_document" "ec2_ssm" {
       "ec2messages:GetMessages",
       "ec2messages:SendReply"
     ]
-    resources = ["*"]
+    resources = [
+      "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:managed-instance/${local.name_prefix}-*",
+      "arn:aws:ssmmessages:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:control-channel/${local.name_prefix}-*",
+      "arn:aws:ec2messages:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:message/*"
+    ]
   }
 }
 
@@ -199,38 +213,99 @@ data "aws_iam_policy_document" "github_actions_assume_role" {
 
 # Deploy role used by GitHub Actions workflows after OIDC trust validation.
 resource "aws_iam_role" "github_actions_deploy" {
-  name               = "${local.name_prefix}-github-actions-deploy"
-  description        = "GitHub Actions deploy role restricted to ${var.github_repository} and configured refs."
-  assume_role_policy = data.aws_iam_policy_document.github_actions_assume_role.json
+  name                 = "${local.name_prefix}-github-actions-deploy"
+  description          = "GitHub Actions deploy role restricted to ${var.github_repository} and configured refs."
+  assume_role_policy   = data.aws_iam_policy_document.github_actions_assume_role.json
+  permissions_boundary = aws_iam_policy.deploy_permission_boundary.arn
 
   tags = merge(var.common_tags, {
     Name = "${local.name_prefix}-github-actions-deploy"
   })
 }
 
-# Deployment permissions cover only the Terraform-managed resource families in this repo.
+data "aws_iam_policy_document" "deploy_permission_boundary" {
+  statement {
+    sid    = "DenyIamOutsideProjectPrefix"
+    effect = "Deny"
+    actions = [
+      "iam:AddRoleToInstanceProfile",
+      "iam:AttachRolePolicy",
+      "iam:CreateInstanceProfile",
+      "iam:CreateOpenIDConnectProvider",
+      "iam:CreatePolicy",
+      "iam:CreateRole",
+      "iam:DeleteInstanceProfile",
+      "iam:DeleteOpenIDConnectProvider",
+      "iam:DeletePolicy",
+      "iam:DeleteRole",
+      "iam:DeleteRolePermissionsBoundary",
+      "iam:DeleteRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:PassRole",
+      "iam:PutRolePermissionsBoundary",
+      "iam:PutRolePolicy",
+      "iam:RemoveRoleFromInstanceProfile",
+      "iam:TagInstanceProfile",
+      "iam:TagOpenIDConnectProvider",
+      "iam:TagPolicy",
+      "iam:TagRole",
+      "iam:UntagInstanceProfile",
+      "iam:UntagOpenIDConnectProvider",
+      "iam:UntagPolicy",
+      "iam:UntagRole",
+      "iam:UpdateAssumeRolePolicy"
+    ]
+    not_resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/${local.name_prefix}-*",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${local.name_prefix}-*",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.name_prefix}-*"
+    ]
+  }
+
+  statement {
+    sid    = "DenyHumanUserAndKeyEscalation"
+    effect = "Deny"
+    actions = [
+      "iam:AttachUserPolicy",
+      "iam:CreateAccessKey",
+      "iam:CreateLoginProfile",
+      "iam:CreateUser",
+      "iam:PutUserPolicy"
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/*"
+    ]
+  }
+
+  statement {
+    sid    = "DenyBoundaryBypass"
+    effect = "Deny"
+    actions = [
+      "iam:DeleteRolePermissionsBoundary",
+      "iam:PutRolePermissionsBoundary"
+    ]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.name_prefix}-github-actions-deploy"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "deploy_permission_boundary" {
+  name        = "${local.name_prefix}-deploy-permission-boundary"
+  description = "Constrains the GitHub Actions deploy role to QuantShield-prefixed IAM resources."
+  policy      = data.aws_iam_policy_document.deploy_permission_boundary.json
+
+  tags = merge(var.common_tags, {
+    Name = "${local.name_prefix}-deploy-permission-boundary"
+  })
+}
+
+# Deployment permissions cover the IAM-managed resource families in this module.
 data "aws_iam_policy_document" "github_actions_deploy" {
   statement {
-    sid = "ManageProjectNetworkingAndCompute"
+    sid = "ReadProjectInfrastructure"
     actions = [
-      "ec2:AssociateRouteTable",
-      "ec2:AttachInternetGateway",
-      "ec2:AuthorizeSecurityGroupEgress",
-      "ec2:AuthorizeSecurityGroupIngress",
-      "ec2:CreateInternetGateway",
-      "ec2:CreateRoute",
-      "ec2:CreateRouteTable",
-      "ec2:CreateSecurityGroup",
-      "ec2:CreateSubnet",
-      "ec2:CreateTags",
-      "ec2:CreateVpc",
-      "ec2:DeleteInternetGateway",
-      "ec2:DeleteRoute",
-      "ec2:DeleteRouteTable",
-      "ec2:DeleteSecurityGroup",
-      "ec2:DeleteSubnet",
-      "ec2:DeleteTags",
-      "ec2:DeleteVpc",
       "ec2:DescribeAvailabilityZones",
       "ec2:DescribeImages",
       "ec2:DescribeInstances",
@@ -238,15 +313,7 @@ data "aws_iam_policy_document" "github_actions_deploy" {
       "ec2:DescribeRouteTables",
       "ec2:DescribeSecurityGroups",
       "ec2:DescribeSubnets",
-      "ec2:DescribeVpcs",
-      "ec2:DetachInternetGateway",
-      "ec2:DisassociateRouteTable",
-      "ec2:ModifySubnetAttribute",
-      "ec2:ModifyVpcAttribute",
-      "ec2:RevokeSecurityGroupEgress",
-      "ec2:RevokeSecurityGroupIngress",
-      "ec2:RunInstances",
-      "ec2:TerminateInstances"
+      "ec2:DescribeVpcs"
     ]
     resources = ["*"]
   }
@@ -258,12 +325,10 @@ data "aws_iam_policy_document" "github_actions_deploy" {
       "iam:CreateInstanceProfile",
       "iam:CreateOpenIDConnectProvider",
       "iam:CreatePolicy",
-      "iam:CreatePolicyVersion",
       "iam:CreateRole",
       "iam:DeleteInstanceProfile",
       "iam:DeleteOpenIDConnectProvider",
       "iam:DeletePolicy",
-      "iam:DeletePolicyVersion",
       "iam:DeleteRole",
       "iam:DeleteRolePolicy",
       "iam:DetachRolePolicy",
@@ -279,6 +344,7 @@ data "aws_iam_policy_document" "github_actions_deploy" {
       "iam:ListRolePolicies",
       "iam:PassRole",
       "iam:PutRolePolicy",
+      "iam:PutRolePermissionsBoundary",
       "iam:RemoveRoleFromInstanceProfile",
       "iam:AddRoleToInstanceProfile",
       "iam:TagInstanceProfile",
@@ -307,6 +373,23 @@ data "aws_iam_policy_document" "github_actions_deploy" {
         "lambda.amazonaws.com"
       ]
     }
+  }
+
+  statement {
+    sid = "ManageAccessAnalyzer"
+    actions = [
+      "access-analyzer:CreateAnalyzer",
+      "access-analyzer:DeleteAnalyzer",
+      "access-analyzer:GetAnalyzer",
+      "access-analyzer:ListAnalyzers",
+      "access-analyzer:ListFindings",
+      "access-analyzer:TagResource",
+      "access-analyzer:UntagResource",
+      "access-analyzer:UpdateFindings"
+    ]
+    resources = [
+      "arn:aws:access-analyzer:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:analyzer/${local.name_prefix}-*"
+    ]
   }
 }
 

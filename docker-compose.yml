@@ -26,6 +26,12 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://quantshield:quantshield@db:5432/quantshield}
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     restart: unless-stopped
     depends_on:
       db:
@@ -40,10 +46,16 @@ services:
       QUANTSHIELD_API_URL: ${QUANTSHIELD_API_URL:-http://api:8000}
     ports:
       - "8501:8501"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
     restart: unless-stopped
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
 
   demo-seed:
     build:

@@ -45,3 +45,13 @@ output "github_oidc_provider_arn" {
   description = "ARN of the GitHub Actions OIDC provider used by the deploy role."
   value       = local.github_oidc_provider_arn
 }
+
+output "access_analyzer_arn" {
+  description = "ARN of the account-level IAM Access Analyzer."
+  value       = aws_accessanalyzer_analyzer.account.arn
+}
+
+output "deploy_permission_boundary_arn" {
+  description = "ARN of the permission boundary attached to the GitHub Actions deploy role."
+  value       = aws_iam_policy.deploy_permission_boundary.arn
+}
