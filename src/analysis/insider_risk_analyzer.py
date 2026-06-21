@@ -140,14 +140,7 @@ class InsiderRiskAnalyzer:
     def _related_security_events(
         symbol: str, security_events: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        suspicious_types = {
-            "ConsoleLogin",
-            "GetObject",
-            "AttachRolePolicy",
-            "PutUserPolicy",
-            "CreatePolicyVersion",
-            "AssumeRole",
-        }
+        suspicious_types = {"ConsoleLogin", "GetObject"}
 
         related: list[dict[str, Any]] = []
         for event in security_events:
@@ -160,18 +153,9 @@ class InsiderRiskAnalyzer:
             if isinstance(payload, dict):
                 payload_symbol = str(payload.get("symbol") or payload.get("ticker") or "")
 
-            result = str(event.get("result") or "")
-            is_failure = event_type == "ConsoleLogin" and result == "Failure"
-            is_data_access = event_type == "GetObject"
-            is_privileged_action = event_type in {
-                "AttachRolePolicy",
-                "PutUserPolicy",
-                "CreatePolicyVersion",
-                "AssumeRole",
-            }
             symbol_matches = payload_symbol.upper() == symbol
 
-            if symbol_matches or is_failure or is_data_access or is_privileged_action:
+            if symbol_matches:
                 related.append(event)
 
         return related

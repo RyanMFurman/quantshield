@@ -36,6 +36,38 @@ real AWS identity-security deployment:
 The local CloudTrail simulator exists so reviewers can run the IAM threat lab
 without an AWS account or AWS bill.
 
+## Zero-Cost Local Review Path
+
+For hiring reviewers, the preferred review path is local:
+
+```bash
+docker compose up --build
+```
+
+Then open:
+
+```text
+http://localhost:8501
+http://localhost:8000/docs
+```
+
+This shows the same IAM detection story without creating AWS resources. The AWS
+runbook below exists to prove the deployment design and cloud engineering
+thinking behind the lab.
+
+## IAM Threat Model Covered
+
+The demo scenario models identity risks that would matter in a quant trading
+firm using AWS:
+
+- root account console login
+- MFA disablement
+- new access key creation
+- administrative policy attachment
+- privileged role assumption
+- S3 access to symbol-specific research data
+- correlation with abnormal market context for analyst review
+
 ## Host Setup
 
 Install packages on the app host:

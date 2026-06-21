@@ -310,7 +310,7 @@ def render_overview(data: dict[str, dict[str, Any]]) -> None:
     kpis = [
         render_kpi("Lab posture", "High" if top_risk >= 90 else "Elevated", "Driven by correlated market/security signals"),
         render_kpi("Top risk score", f"{top_risk:.0f}", "NVDA scenario should hit 100 in demo data"),
-        render_kpi("Open findings", str(len(risks)), f"{len(p1_risks)} P1 insider-risk finding(s)"),
+        render_kpi("Insider-risk findings", str(len(risks)), f"{len(p1_risks)} P1 correlated risk finding(s)"),
         render_kpi("Active alerts", str(len(alerts)), f"{len(p1_alerts)} P1 alert(s), {len(alerts)} total"),
         render_kpi("Telemetry", str(len(events)), f"{len(market)} tracked market symbols"),
     ]
@@ -325,8 +325,8 @@ def render_overview(data: dict[str, dict[str, Any]]) -> None:
         st.markdown(
             f"""
             <div class="qs-panel qs-incident">
-              <h3>Lead Incident</h3>
-              <div class="qs-muted">Market Insider Risk Analyzer</div>
+              <h3>Lead Risk Case</h3>
+              <div class="qs-muted">Identity + research-data + market-context correlation</div>
               <div style="font-size:24px;font-weight:800;margin-top:8px;">
                 {escape(str(lead.get("symbol") or "No symbol"))} risk score {score:.0f}
               </div>

@@ -73,6 +73,31 @@ def test_insider_risk_analyzer_ignores_normal_market_activity() -> None:
     assert run_insider_risk_analysis(market_prices, security_events, now=now) == []
 
 
+def test_insider_risk_analyzer_requires_symbol_specific_security_context() -> None:
+    now = datetime.now(timezone.utc)
+    market_prices = [
+        {
+            "symbol": "SPY",
+            "price": Decimal("525.12"),
+            "prev_close": Decimal("524.80"),
+            "volume": 48_000_000,
+            "captured_at": now,
+        }
+    ]
+    security_events = [
+        {
+            "event_type": "GetObject",
+            "result": "Success",
+            "username": "trading-svc",
+            "source_ip": "198.51.100.10",
+            "raw_payload": {"symbol": "NVDA", "bucket": "quant-research"},
+            "occurred_at": now - timedelta(minutes=2),
+        }
+    ]
+
+    assert run_insider_risk_analysis(market_prices, security_events, now=now) == []
+
+
 class FakeCursor:
     def __init__(self) -> None:
         self.last_query = ""

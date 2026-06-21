@@ -132,9 +132,24 @@ def seed_demo_data(db_url: str) -> dict[str, int]:
             cur.execute(
                 """
                 DELETE FROM insider_risk_findings
-                WHERE symbol = 'NVDA'
-                  AND status IN ('OPEN', 'ACK')
-                  AND reason LIKE 'NVDA showed%%'
+                WHERE status IN ('OPEN', 'ACK')
+                  AND affected_user IN ('trading-svc', 'quant-analyst')
+                """
+            )
+            cur.execute(
+                """
+                DELETE FROM alerts
+                WHERE status IN ('OPEN', 'ACK')
+                  AND rule_id IN (
+                    'BRUTE_FORCE_001',
+                    'IAM_ACCESS_KEY_001',
+                    'IAM_ADMIN_POLICY_001',
+                    'IAM_MFA_DISABLED_001',
+                    'IAM_PRIV_ROLE_001',
+                    'IAM_ROOT_LOGIN_001',
+                    'PRIV_ESC_001',
+                    'DATA_EXFIL_001'
+                  )
                 """
             )
             cur.executemany(

@@ -60,7 +60,26 @@ RDS PostgreSQL
 The v1 live demo intentionally avoids NAT Gateway, ALB, autoscaling, and Kubernetes
 so the project can stay comfortable under a small monthly AWS budget.
 
-## Noah SOC Scope
+## Contributor Scope
+
+### Ryan AWS / IAM / Platform Scope
+
+Built the AWS-oriented platform foundation that makes QuantShield credible as an
+IAM/cloud security engineering project:
+
+- Terraform-based AWS architecture plan for VPC, security groups, IAM, EC2 app
+  host, RDS PostgreSQL, and deployment roles
+- Docker Compose lab that runs FastAPI, Streamlit, PostgreSQL, schema setup, and
+  deterministic demo seeding with no AWS spend required
+- Live-demo runbooks for EC2, RDS, Nginx, HTTPS, environment configuration, and
+  scheduled refresh
+- FastAPI service layer for health, market data, alert, event, detection summary,
+  and insider-risk APIs
+- GitHub Actions CI for Python tests and smoke checks
+- Clear local-to-AWS mapping from simulated CloudTrail telemetry to real AWS
+  CloudTrail, EventBridge, S3, RDS, and IAM operations
+
+### Noah SOC / Detection Engineering Scope
 
 Implemented detection-and-response core focused on cloud SOC workflows:
 
@@ -78,6 +97,37 @@ Implemented detection-and-response core focused on cloud SOC workflows:
   - Recent security events
   - Detection summary by rule and severity
 - Unit tests for rule behavior, dedup logic, responder behavior, and DB-cycle smoke path
+
+## AWS and IAM Skills Demonstrated
+
+QuantShield is designed to show practical cloud security skills without requiring
+reviewers to pay for AWS resources:
+
+- IAM threat modeling for root use, MFA disablement, access keys, policy changes,
+  role assumption, and suspicious S3 data access
+- CloudTrail-style event modeling with realistic AWS event names and identity
+  context
+- PostgreSQL-backed alert and finding persistence
+- API-first security telemetry access through FastAPI
+- Analyst workflow design through Streamlit SOC views
+- Dockerized local deployment and AWS-ready deployment documentation
+- Infrastructure story covering EC2, RDS, security groups, IAM roles, Nginx,
+  HTTPS, and scheduled demo refresh
+
+## Realistic Security Framing
+
+QuantShield does not claim to prove illegal insider trading. In a real financial
+environment, a security tool would raise potential identity, data-access, and
+MNPI exposure risk for human review. The project intentionally frames the
+highest-risk scenario as insider-risk correlation:
+
+- unusual market movement around a watched symbol
+- access to symbol-specific research data
+- suspicious identity activity in the same time window
+- analyst triage of the combined signal
+
+That framing is accurate, defensible, and stronger for IAM/security interviews
+than claiming the app can determine legal intent.
 
 ## API Quickstart
 
@@ -175,29 +225,37 @@ See `docs/live-demo-aws.md` for the EC2, Docker Compose, Nginx, and RDS-backed
 demo runbook. See `docs/live-rds-app-config.md` for live database and app
 environment configuration.
 
-## Resume Summary
+## Portfolio Summary
 
 Built a Dockerized IAM threat detection lab for a simulated quant trading firm
 using AWS-oriented architecture, Terraform, Python, PostgreSQL, FastAPI, Docker,
 and Streamlit to simulate CloudTrail-style telemetry, identity-risk alerts,
 insider-risk correlation, and analyst triage workflows.
 
-## Current Progress
+## Completed Capabilities
 
-### Completed
+- Local Docker SOC lab with PostgreSQL, FastAPI, Streamlit, schema setup, and
+  repeatable demo data
+- CloudTrail-style IAM telemetry simulator
+- IAM detections for root login, MFA disablement, access key creation,
+  administrator policy attachment, and privileged role assumption
+- Detection engine with alert deduplication and DB-cycle execution
+- Insider-risk correlation that requires symbol-specific security context
+- SOC dashboard with overview, IAM risk, insider risk, alerts, market, events,
+  and system views
+- AWS live-demo runbooks for EC2, RDS, Nginx, HTTPS, and scheduled refresh
+- Python test coverage for API routes, detection rules, alert behavior, and
+  insider-risk analysis
 
-- Terraform networking foundation
-- PostgreSQL schema + seed data
-- FastAPI backend skeleton routes
-- Detection engine phase 2 (4 rules + dedup + DB cycle + response hook)
-- Detection and API tests
+## Interview One-Liner
 
-### In Progress
-
-- IAM module
-- Cloud security integrations (GuardDuty / CloudTrail)
-- Dashboard enhancements
+QuantShield is an IAM threat detection lab for a simulated quant trading firm:
+it turns CloudTrail-style identity events and market/research-data context into
+SOC alerts, insider-risk findings, and analyst triage workflows.
 
 ## Disclaimer
 
-QuantShield is a simulated educational and portfolio environment designed to demonstrate engineering capability. It is not connected to live financial systems.
+QuantShield is a simulated educational and portfolio environment designed to
+demonstrate engineering capability. It is not connected to live financial
+systems, does not execute trades, and does not determine legal insider-trading
+intent.
