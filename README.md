@@ -97,7 +97,8 @@ python3 -m pytest -q tests/test_detection_engine.py tests/test_api.py
 ## Live Demo Deployment
 
 See `docs/live-demo-aws.md` for the EC2, Docker Compose, Nginx, and RDS-backed
-demo runbook.
+demo runbook. See `docs/live-rds-app-config.md` for live database and app
+environment configuration.
 
 ## Current Progress
 
