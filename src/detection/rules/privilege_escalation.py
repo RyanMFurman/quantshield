@@ -11,8 +11,10 @@ class PrivilegeEscalationConfig:
     rule_id: str = "PRIV_ESC_001"
     rule_name: str = "Suspicious IAM Privilege Escalation"
     severity: str = "P1"
-    mitre_tactic: str = "Privilege Escalation"
-    mitre_technique: str = "T1078.004"
+    # Granting AdministratorAccess modifies cloud authorization policy, which is
+    # better represented by Cloud Policy Modification than Valid Accounts.
+    mitre_tactic: str = "Defense Evasion"
+    mitre_technique: str = "T1484.002"
 
 
 class PrivilegeEscalationRule:

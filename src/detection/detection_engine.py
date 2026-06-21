@@ -8,6 +8,7 @@ import psycopg
 
 from src.detection.rules.brute_force import BruteForceRule
 from src.detection.rules.data_exfiltration import DataExfiltrationRule
+from src.detection.rules.iam_identity_risk import IamIdentityRiskRule
 from src.detection.rules.lateral_movement import LateralMovementRule
 from src.detection.rules.privilege_escalation import PrivilegeEscalationRule
 from src.response.incident_responder import IncidentResponder
@@ -17,6 +18,7 @@ class DetectionEngine:
     def __init__(self) -> None:
         self.rules = [
             BruteForceRule(),
+            IamIdentityRiskRule(),
             PrivilegeEscalationRule(),
             LateralMovementRule(),
             DataExfiltrationRule(),

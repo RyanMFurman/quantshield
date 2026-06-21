@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "src/**"
+      - "scripts/**"
       - "tests/**"
       - "requirements.txt"
       - "README.md"
@@ -14,6 +15,7 @@ on:
       - "feature/**"
     paths:
       - "src/**"
+      - "scripts/**"
       - "tests/**"
       - "requirements.txt"
       - "README.md"

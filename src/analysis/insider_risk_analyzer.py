@@ -37,6 +37,8 @@ class InsiderRiskAnalyzer:
             related_events = self._related_security_events(symbol, security_events)
             if not related_events:
                 continue
+            if not self._has_research_data_access(related_events):
+                continue
 
             affected_user = str(related_events[0].get("username") or "unknown")
             source_ip = str(related_events[0].get("source_ip") or "unknown")
@@ -140,14 +142,7 @@ class InsiderRiskAnalyzer:
     def _related_security_events(
         symbol: str, security_events: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
-        suspicious_types = {
-            "ConsoleLogin",
-            "GetObject",
-            "AttachRolePolicy",
-            "PutUserPolicy",
-            "CreatePolicyVersion",
-            "AssumeRole",
-        }
+        suspicious_types = {"ConsoleLogin", "GetObject"}
 
         related: list[dict[str, Any]] = []
         for event in security_events:
@@ -160,21 +155,16 @@ class InsiderRiskAnalyzer:
             if isinstance(payload, dict):
                 payload_symbol = str(payload.get("symbol") or payload.get("ticker") or "")
 
-            result = str(event.get("result") or "")
-            is_failure = event_type == "ConsoleLogin" and result == "Failure"
-            is_data_access = event_type == "GetObject"
-            is_privileged_action = event_type in {
-                "AttachRolePolicy",
-                "PutUserPolicy",
-                "CreatePolicyVersion",
-                "AssumeRole",
-            }
             symbol_matches = payload_symbol.upper() == symbol
 
-            if symbol_matches or is_failure or is_data_access or is_privileged_action:
+            if symbol_matches:
                 related.append(event)
 
         return related
+
+    @staticmethod
+    def _has_research_data_access(related_events: list[dict[str, Any]]) -> bool:
+        return any(str(event.get("event_type") or "") == "GetObject" for event in related_events)
 
     def _risk_score(
         self, price: dict[str, Any], related_events: list[dict[str, Any]]

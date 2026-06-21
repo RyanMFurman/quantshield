@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-quantshield}
+      POSTGRES_USER: ${POSTGRES_USER:-quantshield}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quantshield}
+    ports:
+      - "5432:5432"
+    volumes:
+      - quantshield_postgres_data:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./sql/seed_data.sql:/docker-entrypoint-initdb.d/02_seed_data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://quantshield:quantshield@db:5432/quantshield}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: .
+    command: streamlit run src/api/dashboard.py --server.address 0.0.0.0 --server.port 8501
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://quantshield:quantshield@db:5432/quantshield}
+      QUANTSHIELD_API_URL: ${QUANTSHIELD_API_URL:-http://api:8000}
+    ports:
+      - "8501:8501"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+
+  demo-seed:
+    build:
+      context: .
+    command: python scripts/seed_live_demo_data.py
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://quantshield:quantshield@db:5432/quantshield}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  quantshield_postgres_data:

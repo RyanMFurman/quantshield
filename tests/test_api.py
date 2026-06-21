@@ -29,6 +29,15 @@ class ApiRoutesTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
 
+    def test_root_returns_api_index(self) -> None:
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["service"], "QuantShield API")
+        self.assertEqual(payload["docs"], "/docs")
+        self.assertIn("/api/v1/insider-risk", payload["routes"])
+
     def test_market_latest_returns_empty_state_without_database(self) -> None:
         response = self.client.get("/market/latest")
 

@@ -73,6 +73,56 @@ def test_insider_risk_analyzer_ignores_normal_market_activity() -> None:
     assert run_insider_risk_analysis(market_prices, security_events, now=now) == []
 
 
+def test_insider_risk_analyzer_requires_symbol_specific_security_context() -> None:
+    now = datetime.now(timezone.utc)
+    market_prices = [
+        {
+            "symbol": "SPY",
+            "price": Decimal("525.12"),
+            "prev_close": Decimal("524.80"),
+            "volume": 48_000_000,
+            "captured_at": now,
+        }
+    ]
+    security_events = [
+        {
+            "event_type": "GetObject",
+            "result": "Success",
+            "username": "trading-svc",
+            "source_ip": "198.51.100.10",
+            "raw_payload": {"symbol": "NVDA", "bucket": "quant-research"},
+            "occurred_at": now - timedelta(minutes=2),
+        }
+    ]
+
+    assert run_insider_risk_analysis(market_prices, security_events, now=now) == []
+
+
+def test_insider_risk_analyzer_requires_symbol_specific_research_data_access() -> None:
+    now = datetime.now(timezone.utc)
+    market_prices = [
+        {
+            "symbol": "MSFT",
+            "price": Decimal("414.90"),
+            "prev_close": Decimal("413.50"),
+            "volume": 24_000_000,
+            "captured_at": now,
+        }
+    ]
+    security_events = [
+        {
+            "event_type": "ConsoleLogin",
+            "result": "Success",
+            "username": "analyst01",
+            "source_ip": "203.0.113.40",
+            "raw_payload": {"symbol": "MSFT"},
+            "occurred_at": now - timedelta(minutes=9),
+        }
+    ]
+
+    assert run_insider_risk_analysis(market_prices, security_events, now=now) == []
+
+
 class FakeCursor:
     def __init__(self) -> None:
         self.last_query = ""
