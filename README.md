@@ -7,7 +7,7 @@
 ![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Cloud-Native Financial Security Operations Platform built with AWS, Terraform, Python, PostgreSQL, FastAPI, Streamlit, Docker, and GitHub Actions.
+IAM Threat Detection Lab for a simulated quant trading firm, built with AWS-oriented architecture, Terraform, Python, PostgreSQL, FastAPI, Streamlit, Docker, and GitHub Actions.
 
 ## Live Demo
 
@@ -21,11 +21,21 @@ Replace the example domains after the AWS host, DNS, and HTTPS setup are complet
 
 ## What This Project Does
 
-QuantShield simulates a cloud SOC for a boutique quantitative trading firm. The platform combines real infrastructure, telemetry, detection logic, and operational APIs into a production-style portfolio system.
+QuantShield simulates the identity-security monitoring environment of a boutique quantitative trading firm. It is a Dockerized IAM threat detection lab with CloudTrail-style telemetry, identity-risk alerts, insider-risk correlation, and analyst triage workflows.
+
+The lab focuses on high-value identity and data-access risks that matter in financial research environments:
+
+- IAM privilege escalation
+- access key creation
+- root account activity
+- MFA disablement
+- privileged role assumption
+- S3 research-data access
+- abnormal market-data context around sensitive activity
 
 The main demo story:
 
-> QuantShield detects unusual activity around NVDA: abnormal trading volume, failed login attempts from a trading-service account, and S3 data access from the same time window. The Market Insider Risk Analyzer correlates the activity and raises an insider-risk finding.
+> A simulated quant analyst account creates an access key, assumes a privileged trading role, attaches administrative access, touches NVDA research data in S3, and disables MFA. QuantShield correlates the IAM telemetry with abnormal NVDA market movement and raises identity-risk and insider-risk alerts for analyst triage.
 
 ## Live Demo Architecture
 
@@ -57,9 +67,11 @@ Implemented detection-and-response core focused on cloud SOC workflows:
 - Detection engine with DB cycle support: read events, evaluate rules, deduplicate OPEN alerts, write alerts
 - MITRE-mapped rules:
   - Brute force (`T1110`)
+  - IAM identity risk (`T1098`)
   - Privilege escalation (`T1078.004`)
   - Lateral movement (`T1021`)
   - Data exfiltration (`T1567`)
+- CloudTrail-style IAM simulator for local identity attack scenarios
 - Minimal incident response hook for P1 alerts (structured response actions for triage)
 - API visibility for SOC operations:
   - Active alerts
@@ -91,7 +103,8 @@ Set `DATABASE_URL` for DB-backed routes.
 ## Full Local Demo
 
 Run the complete local stack with PostgreSQL, seeded market/security data,
-FastAPI, Streamlit, detection alerts, and insider-risk findings:
+CloudTrail-style IAM telemetry, FastAPI, Streamlit, identity-risk alerts, and
+insider-risk findings:
 
 ```bash
 docker compose up --build
@@ -103,9 +116,9 @@ Start Docker Desktop first. If Docker is not running, Windows may report that
 Open:
 
 - Dashboard: `http://localhost:8501`
-- API index: `http://127.0.0.1:8000/`
-- API docs: `http://127.0.0.1:8000/docs`
-- Insider risk API: `http://127.0.0.1:8000/api/v1/insider-risk`
+- API index: `http://localhost:8000/`
+- API docs: `http://localhost:8000/docs`
+- Insider risk API: `http://localhost:8000/api/v1/insider-risk`
 
 Refresh demo data manually:
 
@@ -164,10 +177,10 @@ environment configuration.
 
 ## Resume Summary
 
-Built a cloud-native financial security operations platform using AWS, Terraform,
-Python, PostgreSQL, FastAPI, Docker, and Streamlit to simulate market telemetry
-ingestion, threat detection engineering, insider-risk analysis, and SOC-style
-incident workflows.
+Built a Dockerized IAM threat detection lab for a simulated quant trading firm
+using AWS-oriented architecture, Terraform, Python, PostgreSQL, FastAPI, Docker,
+and Streamlit to simulate CloudTrail-style telemetry, identity-risk alerts,
+insider-risk correlation, and analyst triage workflows.
 
 ## Current Progress
 

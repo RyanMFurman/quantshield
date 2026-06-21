@@ -19,6 +19,23 @@ RDS PostgreSQL
 Keep the v1 demo under control by avoiding NAT Gateway, ALB, autoscaling, and
 Kubernetes. One small public app host plus RDS is enough for a portfolio demo.
 
+## AWS Story
+
+QuantShield runs locally for zero-cost demos, but the architecture maps to a
+real AWS identity-security deployment:
+
+- CloudTrail provides IAM and S3 activity telemetry.
+- EventBridge or scheduled ingestion moves CloudTrail events into PostgreSQL.
+- The detection engine evaluates IAM privilege changes, access keys, MFA events,
+  role assumptions, root activity, and S3 research-data access.
+- FastAPI exposes alert, event, detection-summary, market, and insider-risk APIs.
+- Streamlit provides the analyst-facing SOC view.
+- Terraform defines the VPC, IAM roles, EC2 app host, RDS PostgreSQL, and GitHub
+  Actions deploy role.
+
+The local CloudTrail simulator exists so reviewers can run the IAM threat lab
+without an AWS account or AWS bill.
+
 ## Host Setup
 
 Install packages on the app host:

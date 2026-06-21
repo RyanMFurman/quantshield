@@ -332,7 +332,7 @@ def render_overview(data: dict[str, dict[str, Any]]) -> None:
               </div>
               <div class="qs-progress"><span style="width:{min(score, 100):.0f}%"></span></div>
               <p style="margin-top:14px;">{escape(reason)}</p>
-              <div class="qs-muted">User: {escape(str(lead.get("affected_user") or "unknown"))} · Source: {escape(clean_ip(lead.get("source_ip")))}</div>
+              <div class="qs-muted">User: {escape(str(lead.get("affected_user") or "unknown"))} &middot; Source: {escape(clean_ip(lead.get("source_ip")))}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -391,10 +391,10 @@ def render_insider_risk(data: dict[str, dict[str, Any]]) -> None:
         st.markdown(
             f"""
             <div class="qs-panel">
-              <h3>{escape(str(item.get("symbol") or "Unknown"))} · {as_float(item.get("risk_score")):.0f}</h3>
+              <h3>{escape(str(item.get("symbol") or "Unknown"))} &middot; {as_float(item.get("risk_score")):.0f}</h3>
               <span class="sev {severity_class(item.get("severity"))}">{escape(str(item.get("severity") or ""))}</span>
               <p>{escape(str(item.get("reason") or ""))}</p>
-              <div class="qs-muted">User {escape(str(item.get("affected_user") or "unknown"))} · Source {escape(clean_ip(item.get("source_ip")))} · {escape(str(item.get("related_event_count") or 0))} related events</div>
+              <div class="qs-muted">User {escape(str(item.get("affected_user") or "unknown"))} &middot; Source {escape(clean_ip(item.get("source_ip")))} &middot; {escape(str(item.get("related_event_count") or 0))} related events</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -438,11 +438,97 @@ def render_active_alerts(data: dict[str, dict[str, Any]]) -> None:
               <h3>{escape(str(item.get("rule_name") or "Alert"))}</h3>
               <span class="sev {severity_class(item.get("severity"))}">{escape(str(item.get("severity") or ""))}</span>
               <p>{escape(str(item.get("description") or ""))}</p>
-              <div class="qs-muted">MITRE {escape(str(item.get("mitre_technique") or "unmapped"))} · User {escape(str(item.get("affected_user") or "unknown"))} · Source {escape(clean_ip(item.get("source_ip")))}</div>
+              <div class="qs-muted">MITRE {escape(str(item.get("mitre_technique") or "unmapped"))} &middot; User {escape(str(item.get("affected_user") or "unknown"))} &middot; Source {escape(clean_ip(item.get("source_ip")))}</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
+
+
+def render_iam_risk(data: dict[str, dict[str, Any]]) -> None:
+    events = items_for(data, "events")
+    alerts = items_for(data, "alerts")
+    iam_event_types = {
+        "AttachRolePolicy",
+        "AttachUserPolicy",
+        "PutUserPolicy",
+        "CreatePolicyVersion",
+        "CreateAccessKey",
+        "DeactivateMFADevice",
+        "AssumeRole",
+        "ConsoleLogin",
+    }
+    iam_events = [event for event in events if event.get("event_type") in iam_event_types]
+    iam_alerts = [
+        alert
+        for alert in alerts
+        if str(alert.get("rule_id") or "").startswith("IAM_")
+        or str(alert.get("rule_id") or "").startswith("PRIV_ESC")
+    ]
+    privileged_events = [
+        event
+        for event in iam_events
+        if event.get("event_type")
+        in {"AttachRolePolicy", "AttachUserPolicy", "PutUserPolicy", "CreateAccessKey", "DeactivateMFADevice", "AssumeRole"}
+    ]
+
+    st.markdown(
+        "<div class='qs-kpi-grid'>"
+        + render_kpi("IAM alerts", str(len(iam_alerts)), "Identity-risk detections requiring review")
+        + render_kpi("IAM events", str(len(iam_events)), "CloudTrail-style identity telemetry")
+        + render_kpi("Privileged actions", str(len(privileged_events)), "Policy, key, role, and MFA activity")
+        + render_kpi("Root/MFA signals", str(len([e for e in iam_events if e.get("username") == "root" or e.get("event_type") == "DeactivateMFADevice"])), "High-value identity controls")
+        + render_kpi("Lab mode", "Local", "No AWS spend required")
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+    left, right = st.columns((1.1, 1))
+    with left:
+        st.markdown("<div class='qs-panel'><h3>IAM Alert Queue</h3>", unsafe_allow_html=True)
+        if iam_alerts:
+            for alert in iam_alerts[:5]:
+                st.markdown(
+                    f"""
+                    <div class="qs-row">
+                      <div><span class="sev {severity_class(alert.get("severity"))}">{escape(str(alert.get("severity") or ""))}</span></div>
+                      <div>{escape(str(alert.get("rule_id") or ""))}</div>
+                      <div>{escape(str(alert.get("affected_user") or "unknown"))}</div>
+                      <div class="qs-source">{escape(clean_ip(alert.get("source_ip")))}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.markdown("<div class='qs-muted'>No IAM alerts are active.</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with right:
+        timeline = "".join(
+            f"<div class='qs-timeline-item'>{escape(str(event.get('event_type') or 'unknown'))} by {escape(str(event.get('username') or 'unknown'))} from {escape(clean_ip(event.get('source_ip')))}</div>"
+            for event in iam_events[:8]
+        )
+        st.markdown(
+            "<div class='qs-panel'><h3>Identity Attack Timeline</h3><div class='qs-timeline'>"
+            + (timeline if timeline else "<div class='qs-muted'>No IAM telemetry loaded.</div>")
+            + "</div></div>",
+            unsafe_allow_html=True,
+        )
+
+    st.dataframe(
+        [
+            {
+                "Event": event.get("event_type"),
+                "Principal": event.get("username"),
+                "Source IP": clean_ip(event.get("source_ip")),
+                "Result": event.get("result"),
+                "Occurred": event.get("occurred_at"),
+            }
+            for event in iam_events
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
 
 
 def render_market_feed(data: dict[str, dict[str, Any]]) -> None:
@@ -533,12 +619,15 @@ def main() -> None:
     data = load_dashboard_data(api_base_url)
     render_header(data)
 
-    tab_overview, tab_risk, tab_alerts, tab_market, tab_events, tab_system = st.tabs(
-        ["Overview", "Insider Risk", "Alerts", "Market", "Events", "System"]
+    tab_overview, tab_iam, tab_risk, tab_alerts, tab_market, tab_events, tab_system = st.tabs(
+        ["Overview", "IAM Risk", "Insider Risk", "Alerts", "Market", "Events", "System"]
     )
 
     with tab_overview:
         render_overview(data)
+
+    with tab_iam:
+        render_iam_risk(data)
 
     with tab_risk:
         render_insider_risk(data)

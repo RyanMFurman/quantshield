@@ -14,6 +14,7 @@ from psycopg.types.json import Jsonb
 
 from src.analysis.insider_risk_analyzer import InsiderRiskAnalyzer
 from src.detection.detection_engine import DetectionEngine
+from src.ingestion.cloudtrail_simulator import build_iam_attack_scenario
 
 
 MARKET_ROWS = [
@@ -116,6 +117,8 @@ SECURITY_EVENTS = [
 def seed_demo_data(db_url: str) -> dict[str, int]:
     now = datetime.now(timezone.utc)
 
+    iam_events = build_iam_attack_scenario(now)
+
     with psycopg.connect(db_url) as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -182,6 +185,35 @@ def seed_demo_data(db_url: str) -> dict[str, int]:
                     ) in SECURITY_EVENTS
                 ],
             )
+            cur.executemany(
+                """
+                INSERT INTO security_events (
+                    event_id, event_type, source_ip, username, user_agent,
+                    result, raw_payload, occurred_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (event_id) DO UPDATE SET
+                    source_ip = EXCLUDED.source_ip,
+                    username = EXCLUDED.username,
+                    user_agent = EXCLUDED.user_agent,
+                    result = EXCLUDED.result,
+                    raw_payload = EXCLUDED.raw_payload,
+                    occurred_at = EXCLUDED.occurred_at
+                """,
+                [
+                    (
+                        event["event_id"],
+                        event["event_type"],
+                        event["source_ip"],
+                        event["username"],
+                        event["user_agent"],
+                        event["result"],
+                        Jsonb(event["raw_payload"]),
+                        event["occurred_at"],
+                    )
+                    for event in iam_events
+                ],
+            )
         conn.commit()
 
     detection_result = DetectionEngine().run_db_cycle(db_url=db_url, window_minutes=30)
@@ -189,7 +221,7 @@ def seed_demo_data(db_url: str) -> dict[str, int]:
 
     return {
         "market_rows_inserted": len(MARKET_ROWS),
-        "security_events_upserted": len(SECURITY_EVENTS),
+        "security_events_upserted": len(SECURITY_EVENTS) + len(iam_events),
         "alerts_inserted": detection_result["alerts_inserted"],
         "insider_findings_inserted": insider_result["findings_inserted"],
     }
