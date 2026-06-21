@@ -103,3 +103,27 @@ curl http://127.0.0.1:8000/market/latest
 curl http://127.0.0.1:8000/alerts/active
 curl http://127.0.0.1:8000/api/v1/insider-risk
 ```
+
+## Scheduled Refresh
+
+Install the refresh service and timer:
+
+```bash
+sudo cp deploy/systemd/quantshield-demo-refresh.service /etc/systemd/system/
+sudo cp deploy/systemd/quantshield-demo-refresh.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now quantshield-demo-refresh.timer
+```
+
+Run the refresh manually:
+
+```bash
+sudo systemctl start quantshield-demo-refresh.service
+```
+
+Check status and logs:
+
+```bash
+systemctl status quantshield-demo-refresh.timer
+journalctl -u quantshield-demo-refresh.service -n 100 --no-pager
+```
