@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import FastAPI, HTTPException
 
 from src.api.config import get_settings
@@ -18,6 +20,23 @@ app = FastAPI(
     version="0.1.0",
     description="Backend API for QuantShield security operations data.",
 )
+
+
+@app.get("/", tags=["system"])
+def root() -> dict[str, Any]:
+    return {
+        "service": "QuantShield API",
+        "status": "ok",
+        "docs": "/docs",
+        "health": "/health",
+        "routes": [
+            "/market/latest",
+            "/alerts/active",
+            "/api/v1/events/recent",
+            "/api/v1/detections/summary",
+            "/api/v1/insider-risk",
+        ],
+    }
 
 
 @app.get("/health", response_model=HealthResponse, tags=["system"])
