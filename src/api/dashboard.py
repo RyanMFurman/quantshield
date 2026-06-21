@@ -212,8 +212,32 @@ def inject_styles() -> None:
         .qs-iam-row {
             grid-template-columns: 52px minmax(170px, 1.4fr) minmax(120px, .9fr) 128px;
         }
-        .qs-risk-row {
-            grid-template-columns: 64px 52px 54px minmax(100px, 1fr);
+        .qs-risk-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+        .qs-risk-item:last-child {
+            border-bottom: 0;
+        }
+        .qs-risk-top,
+        .qs-risk-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 0;
+        }
+        .qs-risk-symbol {
+            font-weight: 800;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .qs-risk-meta {
+            color: var(--qs-muted);
+            margin-top: 8px;
+            font-size: 12px;
         }
         .qs-cell {
             min-width: 0;
@@ -292,14 +316,11 @@ def inject_styles() -> None:
             .qs-row .qs-source {
                 display: none;
             }
-            .qs-iam-row,
-            .qs-risk-row {
+            .qs-iam-row {
                 grid-template-columns: 52px minmax(0, 1fr);
             }
             .qs-iam-row .qs-user,
-            .qs-iam-row .qs-source,
-            .qs-risk-row .qs-score,
-            .qs-risk-row .qs-source {
+            .qs-iam-row .qs-source {
                 display: none;
             }
         }
@@ -391,11 +412,15 @@ def render_overview(data: dict[str, dict[str, Any]]) -> None:
         rows = []
         for risk in risks[:5]:
             rows.append(
-                "<div class='qs-table-row qs-risk-row'>"
-                f"<div class='qs-cell'>{escape(str(risk.get('symbol') or ''))}</div>"
-                f"<div class='qs-cell qs-score'>{as_float(risk.get('risk_score')):.0f}</div>"
-                f"<div class='qs-cell'><span class='sev {severity_class(risk.get('severity'))}'>{escape(str(risk.get('severity') or ''))}</span></div>"
-                f"<div class='qs-cell qs-source'>{escape(clean_ip(risk.get('source_ip')))}</div>"
+                "<div class='qs-risk-item'>"
+                "<div class='qs-risk-top'>"
+                f"<div class='qs-risk-symbol'>{escape(str(risk.get('symbol') or ''))}</div>"
+                f"<span class='sev {severity_class(risk.get('severity'))}'>{escape(str(risk.get('severity') or ''))}</span>"
+                "</div>"
+                "<div class='qs-risk-meta'>"
+                f"<span>Score {as_float(risk.get('risk_score')):.0f}</span>"
+                f"<span>{escape(clean_ip(risk.get('source_ip')))}</span>"
+                "</div>"
                 "</div>"
             )
         st.markdown(
