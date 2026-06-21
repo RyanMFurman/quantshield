@@ -88,6 +88,31 @@ Available routes:
 
 Set `DATABASE_URL` for DB-backed routes.
 
+## Full Local Demo
+
+Run the complete local stack with PostgreSQL, seeded market/security data,
+FastAPI, Streamlit, detection alerts, and insider-risk findings:
+
+```bash
+docker compose up --build
+```
+
+Start Docker Desktop first. If Docker is not running, Windows may report that
+`dockerDesktopLinuxEngine` cannot be found.
+
+Open:
+
+- Dashboard: `http://localhost:8501`
+- API index: `http://127.0.0.1:8000/`
+- API docs: `http://127.0.0.1:8000/docs`
+- Insider risk API: `http://127.0.0.1:8000/api/v1/insider-risk`
+
+Refresh demo data manually:
+
+```bash
+docker compose run --rm demo-seed
+```
+
 ## Detection Engine Quickstart
 
 Run local demo (no DB required):
