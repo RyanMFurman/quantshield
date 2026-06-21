@@ -54,6 +54,9 @@ DATABASE_URL=postgresql://...
 QUANTSHIELD_API_URL=https://api.example.com
 ```
 
+See `docs/live-rds-app-config.md` for RDS security group and app environment
+details.
+
 ## Run App Stack
 
 ```bash
