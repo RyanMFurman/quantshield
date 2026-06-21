@@ -37,6 +37,8 @@ class InsiderRiskAnalyzer:
             related_events = self._related_security_events(symbol, security_events)
             if not related_events:
                 continue
+            if not self._has_research_data_access(related_events):
+                continue
 
             affected_user = str(related_events[0].get("username") or "unknown")
             source_ip = str(related_events[0].get("source_ip") or "unknown")
@@ -159,6 +161,10 @@ class InsiderRiskAnalyzer:
                 related.append(event)
 
         return related
+
+    @staticmethod
+    def _has_research_data_access(related_events: list[dict[str, Any]]) -> bool:
+        return any(str(event.get("event_type") or "") == "GetObject" for event in related_events)
 
     def _risk_score(
         self, price: dict[str, Any], related_events: list[dict[str, Any]]

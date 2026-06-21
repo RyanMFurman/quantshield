@@ -133,7 +133,7 @@ def seed_demo_data(db_url: str) -> dict[str, int]:
                 """
                 DELETE FROM insider_risk_findings
                 WHERE status IN ('OPEN', 'ACK')
-                  AND affected_user IN ('trading-svc', 'quant-analyst')
+                  AND affected_user IN ('trading-svc', 'quant-analyst', 'analyst01')
                 """
             )
             cur.execute(
